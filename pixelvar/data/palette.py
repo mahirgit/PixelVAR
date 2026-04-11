@@ -43,6 +43,14 @@ class PaletteExtractor:
                 pixels = rgb[mask]
             else:
                 pixels = img.reshape(-1, 3)
+            
+            # Filter out near-white background pixels to avoid wasting palette slots
+            # White background (from RGBA compositing) dominates k-means otherwise
+            if len(pixels) > 0:
+                luminance = 0.299 * pixels[:, 0] + 0.587 * pixels[:, 1] + 0.114 * pixels[:, 2]
+                fg_mask = luminance < 245  # Keep non-white pixels
+                if fg_mask.sum() > 0:
+                    pixels = pixels[fg_mask]
             all_pixels.append(pixels)
 
         all_pixels = np.concatenate(all_pixels, axis=0)
