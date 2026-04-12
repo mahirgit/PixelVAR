@@ -41,6 +41,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Claude Code
+.claude/
+
 # Virtual environments
 venv/
 .venv/
