@@ -38,6 +38,12 @@ This document is the source of truth for token semantics, tensor shapes, and int
 - `alpha_masks.npy` saved alongside `index_maps.npy`
 - Never composite onto white — transparent pixels stay transparent
 
+> **Implementation status:** Decision locked, NOT yet implemented end-to-end.
+> Current processed data still uses 0-indexed palette without transparency token.
+> Person B's `data/transparency-splits` PR will implement this.
+> Until then, the tokenizer and AR model code treat the vocab as defined above,
+> but the actual data flowing through uses legacy 0–15 indices.
+
 ### Decision 4: Week 1 Dataset ✅ LOCKED
 
 **Pokemon only for Week 1.**

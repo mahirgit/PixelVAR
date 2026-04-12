@@ -2,14 +2,15 @@
 
 ## Status: IN PROGRESS
 
+> **NOTE:** This is a historical planning snapshot from the start of Day 1.
+> All 7 decisions below have been agreed upon and locked.
+> The **active source of truth** is `docs/design_contract.md`.
+
 ---
 
-## Key Decisions to Lock Today
+## Key Decisions (ALL LOCKED — see design_contract.md)
 
-These are the 7 decisions that must be frozen before any model code is written.
-Decisions marked `[PENDING]` need team agreement. Marked `[RECOMMENDED]` is ChatGPT/Claude consensus.
-
-### 1. Token Semantics `[PENDING]`
+### 1. Token Semantics `[LOCKED]`
 
 **Question:** What does a "token" mean in our pipeline?
 
@@ -28,7 +29,7 @@ Decisions marked `[PENDING]` need team agreement. Marked `[RECOMMENDED]` is Chat
 
 ---
 
-### 2. Palette Regime `[PENDING]`
+### 2. Palette Regime `[LOCKED]`
 
 **Question:** How many colors? Global or per-image?
 
@@ -45,7 +46,7 @@ Decisions marked `[PENDING]` need team agreement. Marked `[RECOMMENDED]` is Chat
 
 ---
 
-### 3. Transparency `[PENDING]`
+### 3. Transparency `[LOCKED]`
 
 **Question:** How do we handle transparent pixels?
 
@@ -69,7 +70,7 @@ Token 17: [MASK] (reserved for Option B, unused in v0)
 
 ---
 
-### 4. Week 1 Dataset `[PENDING]`
+### 4. Week 1 Dataset `[LOCKED]`
 
 **Question:** What do we actually train on this week?
 
@@ -84,7 +85,7 @@ For Week 1, Pokemon is enough to build and validate the full pipeline. Don't mix
 
 ---
 
-### 5. Split Strategy `[PENDING]`
+### 5. Split Strategy `[LOCKED]`
 
 **Question:** How do we split train/val/test?
 
@@ -104,7 +105,7 @@ For the 170K Sprites dataset later: split by `sheet_id` or `character_id`.
 
 ---
 
-### 6. Scope: Mainline vs. Stretch `[PENDING]`
+### 6. Scope: Mainline vs. Stretch `[LOCKED]`
 
 **Question:** What is the core deliverable vs. nice-to-have?
 
@@ -121,7 +122,7 @@ For the 170K Sprites dataset later: split by `sheet_id` or `character_id`.
 
 ---
 
-### 7. Repo Source of Truth `[PENDING]`
+### 7. Repo Source of Truth `[LOCKED]`
 
 **Question:** Notebooks or package code?
 

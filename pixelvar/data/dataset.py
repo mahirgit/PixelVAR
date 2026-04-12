@@ -34,8 +34,6 @@ class PixelArtDataset(Dataset):
         processed_dir: str,
         tokenizer: BaseTokenizer = None,
         return_rgb: bool = True,
-        split: str = None,
-        split_file: str = None,
     ):
         self.processed_dir = Path(processed_dir)
         self.return_rgb = return_rgb
@@ -60,36 +58,14 @@ class PixelArtDataset(Dataset):
         else:
             self.quantized_rgb = None
 
-        # Apply split filter if provided
-        if split is not None and split_file is not None:
-            self._apply_split(split, split_file)
+        # NOTE: Train/val/test splitting is not yet implemented.
+        # It will be added by Person B once the data manifest (with pokemon_id
+        # per sample) exists. See design_contract.md Decision 5.
 
         print(f"  Loaded {len(self)} samples from {self.processed_dir}")
         print(f"  Palette size: {self.palette_size}")
         print(f"  Tokenizer: {self.tokenizer.__class__.__name__}")
         print(f"  Scales: {self.tokenizer.scale_resolutions}")
-
-    def _apply_split(self, split: str, split_file: str):
-        """Filter samples based on a split JSON file."""
-        import json
-
-        with open(split_file) as f:
-            split_map = json.load(f)
-
-        # Get indices that belong to this split
-        keep = []
-        for idx in range(len(self.index_maps)):
-            # The split_map maps asset_id -> split_name
-            # For now, we assume sequential ordering matches the manifest
-            asset_id = str(idx)
-            if split_map.get(asset_id, "") == split:
-                keep.append(idx)
-
-        if keep:
-            keep = np.array(keep)
-            self.index_maps = self.index_maps[keep]
-            if self.quantized_rgb is not None:
-                self.quantized_rgb = self.quantized_rgb[keep]
 
     def __len__(self):
         return len(self.index_maps)
@@ -103,8 +79,10 @@ class PixelArtDataset(Dataset):
         # Remove batch dim for single sample: (1, h, w) -> (h, w)
         multi_scale_maps = [m.squeeze(0) for m in multi_scale_maps]
 
-        # Flatten to token sequence
-        token_sequence = torch.cat([m.flatten() for m in multi_scale_maps])
+        # Flatten to token sequence via tokenizer contract
+        token_sequence = self.tokenizer.to_sequence(
+            [m.unsqueeze(0) for m in multi_scale_maps]
+        ).squeeze(0)
 
         result = {
             "index_map": torch.from_numpy(index_map).long(),
@@ -145,12 +123,12 @@ def get_dataloader(
     batch_size: int = 64,
     shuffle: bool = True,
     num_workers: int = 4,
-    scale_resolutions: list[int] = None,
+    tokenizer: BaseTokenizer = None,
 ) -> DataLoader:
     """Create a DataLoader for processed pixel art data."""
     dataset = PixelArtDataset(
         processed_dir=processed_dir,
-        scale_resolutions=scale_resolutions,
+        tokenizer=tokenizer,
     )
     return DataLoader(
         dataset,

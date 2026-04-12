@@ -110,6 +110,16 @@ def main():
     print(f"  index_maps: shape={index_maps.shape}, dtype={index_maps.dtype}")
     print(f"  value range: [{index_maps.min()}, {index_maps.max()}]")
 
+    # NOTE: Current processed data uses 0-indexed palette (no transparency token).
+    # Once Person B lands the transparency fix, token 0 = transparent and
+    # palette colors shift to 1-K. This smoke test works with either format —
+    # it just visualizes whatever indices are in the data.
+    has_alpha = (data_dir / "alpha_masks.npy").exists()
+    if has_alpha:
+        print("  alpha_masks.npy found — transparency-aware data")
+    else:
+        print("  WARNING: No alpha_masks.npy — legacy data without transparency token")
+
     # Load palette
     extractor = PaletteExtractor()
     extractor.load(palette_path)
