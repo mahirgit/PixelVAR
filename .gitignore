@@ -2,6 +2,23 @@
 data/raw/
 *.npy
 data/processed/*/samples/
+data/processed/
+
+# Model artifacts
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Outputs
+outputs/
+visualizations/
+reports/generated/
+
+# Experiment tracking
+wandb/
+runs/
+lightning_logs/
 
 # Python
 __pycache__/
@@ -14,6 +31,7 @@ build/
 
 # Jupyter
 .ipynb_checkpoints/
+notebook_outputs/
 
 # OS
 .DS_Store
@@ -23,9 +41,10 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Claude Code
+.claude/
+
 # Virtual environments
 venv/
 .venv/
 env/
-TA_MEETING_CHECKLIST.md
-TA_QA_PREP.md
