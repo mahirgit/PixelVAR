@@ -202,13 +202,11 @@ def main():
         else:
             print(f"[warn] Sprites directory not found: {sprites_dir}")
 
-    # Load Pokemon
+    # Load Pokemon (all variants: front, back, shiny, shiny_back)
     if args.dataset in ("pokemon", "all"):
-        pokemon_dir = RAW_DIR / "pokemon" / "sprites"
-        if not pokemon_dir.exists():
-            pokemon_dir = RAW_DIR / "pokemon"
-        if pokemon_dir.exists():
-            imgs = load_images_from_dir(pokemon_dir)
+        pokemon_base = RAW_DIR / "pokemon"
+        if pokemon_base.exists():
+            imgs = load_images_from_dir(pokemon_base)  # rglob finds all subdirs
             if imgs:
                 datasets["pokemon"] = imgs
         else:
