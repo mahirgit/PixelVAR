@@ -10,6 +10,9 @@ class DataConfig:
     processed_dir: str = "data/processed"
     target_size: int = 32
     palette_size: int = 16
+    transparent_token: int = 0
+    vocab_size: int = 17
+    mask_token: int = 17
     num_scales: int = 6  # 1x1, 2x2, 4x4, 8x8, 16x16, 32x32
     scale_resolutions: List[int] = field(
         default_factory=lambda: [1, 2, 4, 8, 16, 32]

@@ -35,14 +35,14 @@ def plot_palette(palette: np.ndarray, save_path: Path = None):
         hex_color = "#{:02x}{:02x}{:02x}".format(*color)
         luminance = 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]
         text_color = "white" if luminance < 128 else "black"
-        ax.text(i + 0.5, 0.5, f"{i}", ha="center", va="center",
+        ax.text(i + 0.5, 0.5, f"{i + 1}", ha="center", va="center",
                 fontsize=8, color=text_color, fontweight="bold")
 
     ax.set_xlim(0, n)
     ax.set_ylim(0, 1)
     ax.set_aspect("equal")
     ax.axis("off")
-    ax.set_title(f"Extracted Palette ({n} colors)", fontsize=12, fontweight="bold")
+    ax.set_title(f"Extracted Palette ({n} colors, tokens 1-{n})", fontsize=12, fontweight="bold")
     plt.tight_layout()
 
     if save_path:
@@ -115,9 +115,13 @@ def plot_multiscale(
                     values, counts = np.unique(block, return_counts=True)
                     scale_map[i, j] = values[np.argmax(counts)]
 
-        # Convert indices to RGB
-        rgb = palette[scale_map]
-        axes[si].imshow(rgb, interpolation="nearest")
+        # Convert token IDs to RGBA. Token 0 is transparent, 1..K are palette colors.
+        rgba = np.zeros((*scale_map.shape, 4), dtype=np.uint8)
+        opaque = scale_map > 0
+        if opaque.any():
+            rgba[opaque, :3] = palette[scale_map[opaque] - 1]
+            rgba[opaque, 3] = 255
+        axes[si].imshow(rgba, interpolation="nearest")
         axes[si].set_title(f"{res}x{res}", fontsize=10)
         axes[si].axis("off")
 
@@ -139,13 +143,17 @@ def plot_index_map_heatmap(
     """Show the palette index map as a heatmap alongside the RGB rendering."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(6, 3))
 
-    ax1.imshow(index_map, cmap="tab20", interpolation="nearest", vmin=0, vmax=len(palette) - 1)
+    ax1.imshow(index_map, cmap="tab20", interpolation="nearest", vmin=0, vmax=len(palette))
     ax1.set_title("Palette Index Map", fontsize=10)
     ax1.axis("off")
 
-    rgb = palette[index_map]
-    ax2.imshow(rgb, interpolation="nearest")
-    ax2.set_title("RGB Rendering", fontsize=10)
+    rgba = np.zeros((*index_map.shape, 4), dtype=np.uint8)
+    opaque = index_map > 0
+    if opaque.any():
+        rgba[opaque, :3] = palette[index_map[opaque] - 1]
+        rgba[opaque, 3] = 255
+    ax2.imshow(rgba, interpolation="nearest")
+    ax2.set_title("RGBA Rendering", fontsize=10)
     ax2.axis("off")
 
     plt.tight_layout()
@@ -162,14 +170,14 @@ def plot_dataset_stats(index_maps: np.ndarray, palette_size: int, save_path: Pat
 
     # Palette index distribution
     flat = index_maps.flatten()
-    ax1.hist(flat, bins=np.arange(palette_size + 1) - 0.5, edgecolor="black", alpha=0.7)
+    ax1.hist(flat, bins=np.arange(palette_size + 2) - 0.5, edgecolor="black", alpha=0.7)
     ax1.set_xlabel("Palette Index")
     ax1.set_ylabel("Frequency")
     ax1.set_title("Palette Index Distribution")
-    ax1.set_xticks(range(palette_size))
+    ax1.set_xticks(range(palette_size + 1))
 
     # Unique colors per image
-    unique_per_img = [len(np.unique(m)) for m in index_maps]
+    unique_per_img = [len(np.unique(m[m > 0])) for m in index_maps]
     ax2.hist(unique_per_img, bins=range(1, palette_size + 2), edgecolor="black", alpha=0.7)
     ax2.set_xlabel("# Unique Colors")
     ax2.set_ylabel("# Images")
@@ -199,8 +207,12 @@ def visualize_dataset(dataset_name: str):
 
     # Load data
     index_maps = np.load(data_dir / "index_maps.npy")
-    quantized = np.load(data_dir / "quantized_rgb.npy")
-    originals = np.load(data_dir / "originals_rgb.npy")
+    if (data_dir / "quantized_rgba.npy").exists():
+        quantized = np.load(data_dir / "quantized_rgba.npy")
+        originals = np.load(data_dir / "originals_rgba.npy")
+    else:
+        quantized = np.load(data_dir / "quantized_rgb.npy")
+        originals = np.load(data_dir / "originals_rgb.npy")
 
     extractor = PaletteExtractor()
     extractor.load(data_dir / "palette.json")

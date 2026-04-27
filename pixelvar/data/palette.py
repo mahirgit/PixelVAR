@@ -1,24 +1,22 @@
-"""
-Palette extraction and quantization for pixel art sprites.
+"""Palette extraction, quantization, and rendering for PixelVAR tokens."""
 
-Extracts a fixed-size palette from a dataset of images using k-means clustering,
-then quantizes all pixels to their nearest palette entry.
-"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Optional, Tuple
 
 import numpy as np
-from PIL import Image
-from sklearn.cluster import KMeans, MiniBatchKMeans
-from pathlib import Path
-from typing import Tuple, Optional
-import json
+from sklearn.cluster import MiniBatchKMeans
 
 
 class PaletteExtractor:
     """Extract and manage color palettes for pixel art."""
 
-    def __init__(self, palette_size: int = 16, random_state: int = 42):
+    def __init__(self, palette_size: int = 16, random_state: int = 42, alpha_threshold: int = 128):
         self.palette_size = palette_size
         self.random_state = random_state
+        self.alpha_threshold = alpha_threshold
         self.palette: Optional[np.ndarray] = None  # (palette_size, 3) uint8
 
     def fit(self, images: list[np.ndarray], max_pixels: int = 500_000) -> "PaletteExtractor":
@@ -27,31 +25,25 @@ class PaletteExtractor:
 
         Args:
             images: List of numpy arrays (H, W, 3) in uint8.
-            max_pixels: Maximum number of pixel samples for k-means (for speed).
+            max_pixels: Maximum number of opaque pixel samples for k-means.
         """
-        # Collect all pixels
         all_pixels = []
         for img in images:
+            img = np.asarray(img)
             if img.ndim == 2:
-                # Grayscale -> RGB
-                img = np.stack([img] * 3, axis=-1)
-            if img.shape[-1] == 4:
-                # RGBA -> RGB (ignore transparent pixels)
+                pixels = np.stack([img] * 3, axis=-1).reshape(-1, 3)
+            elif img.shape[-1] == 4:
                 alpha = img[:, :, 3]
                 rgb = img[:, :, :3]
-                mask = alpha > 128
-                pixels = rgb[mask]
+                pixels = rgb[alpha >= self.alpha_threshold]
             else:
-                pixels = img.reshape(-1, 3)
-            
-            # Filter out near-white background pixels to avoid wasting palette slots
-            # White background (from RGBA compositing) dominates k-means otherwise
+                pixels = img[:, :, :3].reshape(-1, 3)
+
             if len(pixels) > 0:
-                luminance = 0.299 * pixels[:, 0] + 0.587 * pixels[:, 1] + 0.114 * pixels[:, 2]
-                fg_mask = luminance < 245  # Keep non-white pixels
-                if fg_mask.sum() > 0:
-                    pixels = pixels[fg_mask]
-            all_pixels.append(pixels)
+                all_pixels.append(pixels.astype(np.uint8))
+
+        if not all_pixels:
+            raise ValueError("No opaque pixels found for palette extraction")
 
         all_pixels = np.concatenate(all_pixels, axis=0)
         print(f"  Total pixels collected: {len(all_pixels):,}")
@@ -63,7 +55,16 @@ class PaletteExtractor:
             all_pixels = all_pixels[indices]
             print(f"  Subsampled to {max_pixels:,} pixels for k-means")
 
-        # Run k-means
+        unique_pixels = np.unique(all_pixels, axis=0)
+        if len(unique_pixels) <= self.palette_size:
+            palette = unique_pixels
+            if len(palette) < self.palette_size:
+                pad = np.repeat(palette[-1:], self.palette_size - len(palette), axis=0)
+                palette = np.concatenate([palette, pad], axis=0)
+            self.palette = self._sort_by_luminance(palette.astype(np.uint8))
+            print(f"  Palette extracted from {len(unique_pixels)} unique colors without k-means")
+            return self
+
         print(f"  Running MiniBatchKMeans with k={self.palette_size}...")
         kmeans = MiniBatchKMeans(
             n_clusters=self.palette_size,
@@ -73,18 +74,14 @@ class PaletteExtractor:
         )
         kmeans.fit(all_pixels.astype(np.float32))
 
-        self.palette = np.round(kmeans.cluster_centers_).astype(np.uint8)
-        # Sort palette by luminance for consistency
-        luminance = 0.299 * self.palette[:, 0] + 0.587 * self.palette[:, 1] + 0.114 * self.palette[:, 2]
-        sort_idx = np.argsort(luminance)
-        self.palette = self.palette[sort_idx]
+        self.palette = self._sort_by_luminance(np.round(kmeans.cluster_centers_).astype(np.uint8))
 
         print(f"  Palette extracted: {self.palette.shape}")
         return self
 
     def quantize(self, image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Quantize an image to the extracted palette.
+        Quantize an RGB image to 0-indexed palette IDs.
 
         Args:
             image: (H, W, 3) uint8 array.
@@ -111,12 +108,63 @@ class PaletteExtractor:
         quantized = self.palette[indices].reshape(h, w, 3)
         return index_map, quantized
 
+    def quantize_with_transparency(self, image: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Quantize an RGB/RGBA image to PixelVAR token IDs.
+
+        Returns:
+            index_map: ``(H, W)`` uint8 with 0 transparent and 1..K palette tokens.
+            alpha_mask: ``(H, W)`` bool, True for opaque pixels.
+            quantized_rgba: ``(H, W, 4)`` uint8 preview preserving transparency.
+        """
+        assert self.palette is not None, "Call fit() first"
+        rgba = self._ensure_rgba(image)
+        h, w = rgba.shape[:2]
+        alpha_mask = rgba[:, :, 3] >= self.alpha_threshold
+
+        index_map = np.zeros((h, w), dtype=np.uint8)
+        quantized_rgba = np.zeros((h, w, 4), dtype=np.uint8)
+        if alpha_mask.any():
+            rgb = rgba[:, :, :3]
+            opaque_pixels = rgb[alpha_mask].astype(np.float32)
+            palette_f = self.palette.astype(np.float32)
+            dists = np.sum((opaque_pixels[:, None, :] - palette_f[None, :, :]) ** 2, axis=-1)
+            nearest = np.argmin(dists, axis=-1).astype(np.uint8)
+            index_map[alpha_mask] = nearest + 1
+            quantized_rgba[alpha_mask, :3] = self.palette[nearest]
+            quantized_rgba[alpha_mask, 3] = 255
+        return index_map, alpha_mask, quantized_rgba
+
+    def render_index_map(self, index_map: np.ndarray, alpha_mask: np.ndarray | None = None) -> np.ndarray:
+        """Render PixelVAR token IDs to an RGBA image."""
+        assert self.palette is not None, "Load or fit a palette first"
+        tokens = np.asarray(index_map)
+        if tokens.ndim != 2:
+            raise ValueError(f"index_map must be 2D, got {tokens.shape}")
+        if tokens.min() < 0 or tokens.max() > self.palette_size:
+            raise ValueError(f"token range [{tokens.min()}, {tokens.max()}] outside [0, {self.palette_size}]")
+
+        if alpha_mask is None:
+            alpha_mask = tokens != 0
+        alpha_mask = np.asarray(alpha_mask, dtype=bool)
+
+        rgba = np.zeros((*tokens.shape, 4), dtype=np.uint8)
+        opaque = alpha_mask & (tokens > 0)
+        if opaque.any():
+            rgba[opaque, :3] = self.palette[tokens[opaque] - 1]
+            rgba[opaque, 3] = 255
+        return rgba
+
     def save(self, path: Path):
         """Save palette to a JSON file."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         data = {
             "palette_size": self.palette_size,
+            "transparent_token": 0,
+            "palette_token_start": 1,
+            "palette_token_end": self.palette_size,
+            "alpha_threshold": self.alpha_threshold,
             "colors": self.palette.tolist(),
         }
         with open(path, "w") as f:
@@ -128,6 +176,7 @@ class PaletteExtractor:
         with open(path) as f:
             data = json.load(f)
         self.palette_size = data["palette_size"]
+        self.alpha_threshold = data.get("alpha_threshold", self.alpha_threshold)
         self.palette = np.array(data["colors"], dtype=np.uint8)
         return self
 
@@ -143,3 +192,22 @@ class PaletteExtractor:
             r, c = divmod(i, cols)
             img[r * swatch_h:(r + 1) * swatch_h, c * swatch_w:(c + 1) * swatch_w] = color
         return img
+
+    @staticmethod
+    def _sort_by_luminance(palette: np.ndarray) -> np.ndarray:
+        luminance = 0.299 * palette[:, 0] + 0.587 * palette[:, 1] + 0.114 * palette[:, 2]
+        return palette[np.argsort(luminance)]
+
+    @staticmethod
+    def _ensure_rgba(image: np.ndarray) -> np.ndarray:
+        img = np.asarray(image)
+        if img.ndim == 2:
+            rgb = np.stack([img] * 3, axis=-1)
+            alpha = np.full((*img.shape, 1), 255, dtype=np.uint8)
+            return np.concatenate([rgb, alpha], axis=-1).astype(np.uint8)
+        if img.shape[-1] == 4:
+            return img.astype(np.uint8)
+        if img.shape[-1] == 3:
+            alpha = np.full((*img.shape[:2], 1), 255, dtype=np.uint8)
+            return np.concatenate([img[:, :, :3], alpha], axis=-1).astype(np.uint8)
+        raise ValueError(f"Unsupported image shape: {img.shape}")

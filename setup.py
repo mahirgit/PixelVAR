@@ -5,12 +5,14 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
-        "torch>=2.1.0",
-        "torchvision>=0.16.0",
+        "torch>=2.4.0",
+        "torchvision>=0.19.0",
+        "lightning>=2.6,<2.7",
         "numpy>=1.24.0",
         "Pillow>=10.0.0",
         "scikit-learn>=1.3.0",
         "matplotlib>=3.7.0",
         "tqdm>=4.65.0",
+        "pyyaml>=6.0.0",
     ],
 )

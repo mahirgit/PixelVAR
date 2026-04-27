@@ -111,31 +111,41 @@ def download_pokemon():
     print("    Then unzip in data/raw/pokemon/")
 
     # Alternative: PokeAPI sprites (smaller but freely accessible)
-    print("\n  Option 2 - Downloading from PokeAPI (first 905 Pokemon)...")
+    print("\n  Option 2 - Downloading from PokeAPI (front/back/shiny variants for first 905 Pokemon)...")
     sprites_dir = out_dir / "sprites"
     sprites_dir.mkdir(parents=True, exist_ok=True)
 
-    existing = list(sprites_dir.glob("*.png"))
-    if len(existing) >= 800:
+    existing = list(sprites_dir.rglob("*.png"))
+    if len(existing) >= 3000:
         print(f"  [skip] Already have {len(existing)} sprites")
         return
 
     base_url = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon"
+    variants = {
+        "front": ("", sprites_dir),
+        "back": ("back", sprites_dir / "back"),
+        "shiny": ("shiny", sprites_dir / "shiny"),
+        "shiny_back": ("back/shiny", sprites_dir / "back" / "shiny"),
+    }
+    for _, dest_dir in variants.values():
+        dest_dir.mkdir(parents=True, exist_ok=True)
+
     downloaded = 0
     for pokemon_id in tqdm(range(1, 906), desc="Pokemon sprites"):
-        dest = sprites_dir / f"{pokemon_id}.png"
-        if dest.exists():
-            downloaded += 1
-            continue
-        url = f"{base_url}/{pokemon_id}.png"
-        try:
-            resp = requests.get(url, timeout=10)
-            if resp.status_code == 200:
-                with open(dest, "wb") as f:
-                    f.write(resp.content)
+        for variant_path, dest_dir in variants.values():
+            dest = dest_dir / f"{pokemon_id}.png"
+            if dest.exists():
                 downloaded += 1
-        except Exception:
-            pass
+                continue
+            url = f"{base_url}/{variant_path}/{pokemon_id}.png" if variant_path else f"{base_url}/{pokemon_id}.png"
+            try:
+                resp = requests.get(url, timeout=10)
+                if resp.status_code == 200:
+                    with open(dest, "wb") as f:
+                        f.write(resp.content)
+                    downloaded += 1
+            except Exception:
+                pass
 
     print(f"  Downloaded {downloaded} Pokemon sprites")
 
