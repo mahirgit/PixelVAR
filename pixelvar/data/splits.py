@@ -38,7 +38,17 @@ def make_id_splits(
     seed: int = 42,
 ) -> dict[str, str]:
     """Create deterministic train/val/test assignments for unique IDs."""
-    unique_ids = sorted({str(i) for i in ids if i is not None}, key=lambda x: int(x) if x.isdigit() else x)
+    return make_group_splits(ids, train_ratio=train_ratio, val_ratio=val_ratio, seed=seed)
+
+
+def make_group_splits(
+    group_ids: Iterable[str],
+    train_ratio: float = 0.8,
+    val_ratio: float = 0.1,
+    seed: int = 42,
+) -> dict[str, str]:
+    """Create deterministic train/val/test assignments for arbitrary asset groups."""
+    unique_ids = sorted({str(i) for i in group_ids if i is not None}, key=_stable_group_sort_key)
     rng = random.Random(seed)
     rng.shuffle(unique_ids)
 
@@ -59,17 +69,34 @@ def make_id_splits(
     return split_map
 
 
+def assert_no_group_split_leakage(
+    sample_records: list[dict],
+    group_key: str = "group_id",
+    split_key: str = "split",
+) -> None:
+    """Raise if one asset group appears in multiple splits."""
+    by_group: dict[str, set[str]] = {}
+    for record in sample_records:
+        group_id = record.get(group_key)
+        split = record.get(split_key)
+        if group_id is None or split is None:
+            continue
+        by_group.setdefault(str(group_id), set()).add(str(split))
+
+    leaked = {group_id: splits for group_id, splits in by_group.items() if len(splits) > 1}
+    if leaked:
+        preview = ", ".join(f"{gid}:{sorted(splits)}" for gid, splits in list(leaked.items())[:5])
+        raise ValueError(f"Split leakage detected for {group_key}: {preview}")
+
+
 def assert_no_split_leakage(sample_records: list[dict]) -> None:
     """Raise if one Pokemon ID appears in multiple splits."""
-    by_id: dict[str, set[str]] = {}
-    for record in sample_records:
-        pokemon_id = record.get("pokemon_id")
-        split = record.get("split")
-        if pokemon_id is None or split is None:
-            continue
-        by_id.setdefault(str(pokemon_id), set()).add(str(split))
+    try:
+        assert_no_group_split_leakage(sample_records, group_key="pokemon_id")
+    except ValueError as exc:
+        raise ValueError(str(exc).replace("Split leakage detected for pokemon_id", "Pokemon split leakage detected")) from exc
 
-    leaked = {pokemon_id: splits for pokemon_id, splits in by_id.items() if len(splits) > 1}
-    if leaked:
-        preview = ", ".join(f"{pid}:{sorted(splits)}" for pid, splits in list(leaked.items())[:5])
-        raise ValueError(f"Pokemon split leakage detected: {preview}")
+
+def _stable_group_sort_key(group_id: str) -> tuple[int, int | str]:
+    text = str(group_id)
+    return (0, int(text)) if text.isdigit() else (1, text)

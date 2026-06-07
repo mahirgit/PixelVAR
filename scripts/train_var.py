@@ -13,7 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 try:
     import lightning as L
-    from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
+    import torch
+    from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
     from lightning.pytorch.loggers import CSVLogger, WandbLogger
 except ModuleNotFoundError as exc:  # pragma: no cover - CLI guard.
     raise SystemExit("Lightning is not installed. Run: pip install 'lightning>=2.6,<2.7'") from exc
@@ -52,6 +53,17 @@ def build_callbacks(config: dict, run_name: str) -> list:
     ]
     if config.get("log_lr", True):
         callbacks.append(LearningRateMonitor(logging_interval="epoch"))
+    early_stopping = config.get("early_stopping")
+    if early_stopping:
+        early_stopping_config = {} if early_stopping is True else dict(early_stopping)
+        callbacks.append(
+            EarlyStopping(
+                monitor=early_stopping_config.get("monitor", monitor),
+                mode=early_stopping_config.get("mode", "min"),
+                patience=int(early_stopping_config.get("patience", 20)),
+                min_delta=float(early_stopping_config.get("min_delta", 0.0)),
+            )
+        )
     return callbacks
 
 
@@ -109,6 +121,9 @@ def main() -> None:
 
     seed = int(config.get("seed", 42))
     L.seed_everything(seed, workers=True)
+    matmul_precision = config.get("matmul_precision")
+    if matmul_precision:
+        torch.set_float32_matmul_precision(str(matmul_precision))
 
     data_config = config.get("data", {})
     datamodule = PixelArtDataModule(**data_config)

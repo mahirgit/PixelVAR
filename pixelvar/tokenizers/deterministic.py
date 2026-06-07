@@ -28,10 +28,10 @@ class DeterministicPyramidTokenizer(BaseTokenizer):
     def __post_init__(self) -> None:
         if not self.scale_resolutions:
             raise ValueError("scale_resolutions must be non-empty")
-        if self.scale_resolutions[-1] != 32:
-            raise ValueError("The final deterministic tokenizer scale must be 32")
         if any(s <= 0 for s in self.scale_resolutions):
             raise ValueError("All scale resolutions must be positive")
+        if any(b <= a for a, b in zip(self.scale_resolutions, self.scale_resolutions[1:])):
+            raise ValueError("scale_resolutions must be strictly increasing")
 
     @property
     def token_counts(self) -> list[int]:

@@ -40,3 +40,30 @@ def test_dataset_filters_split_and_returns_token_sequence(tmp_path):
     assert sample["alpha_mask"].shape == (32, 32)
     assert sample["token_sequence"].shape == (1365,)
     assert sample["rgb_preview"].shape == (3, 32, 32)
+
+
+def test_dataset_supports_vq_token_maps_without_palette(tmp_path):
+    processed = tmp_path / "sprites_vqvae16"
+    processed.mkdir()
+
+    index_maps = (np.arange(4 * 8 * 8, dtype=np.uint16).reshape(4, 8, 8) % 256).astype(np.uint8)
+    np.save(processed / "index_maps.npy", index_maps)
+    manifest = {
+        "num_samples": 4,
+        "vocab_size": 256,
+        "samples": [
+            {"index": 0, "group_id": "a", "split": "train"},
+            {"index": 1, "group_id": "b", "split": "train"},
+            {"index": 2, "group_id": "c", "split": "val"},
+            {"index": 3, "group_id": "d", "split": "test"},
+        ],
+    }
+    (processed / "manifest.json").write_text(json.dumps(manifest))
+
+    dataset = PixelArtDataset(processed, split="train", scale_resolutions=[1, 2, 4, 8], return_rgb=False)
+    sample = dataset[0]
+
+    assert dataset.vocab_size == 256
+    assert len(dataset) == 2
+    assert sample["index_map"].shape == (8, 8)
+    assert sample["token_sequence"].shape == (85,)

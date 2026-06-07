@@ -4,6 +4,13 @@ output_dir: outputs/runs
 checkpoint_dir: checkpoints
 checkpoint_monitor: val/loss
 log_lr: true
+matmul_precision: high
+
+early_stopping:
+  monitor: val/loss
+  mode: min
+  patience: 20
+  min_delta: 0.001
 
 data:
   processed_dir: data/processed/pokemon

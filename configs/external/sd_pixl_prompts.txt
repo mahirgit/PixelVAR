@@ -1,0 +1,9 @@
+# Fixed prompt set for SD-piXL external-baseline smoke and batch runs.
+32x32 pixel art fantasy hero character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art mage character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art armored knight character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art rogue character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art monster character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art robot character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art archer character sprite, centered full body, transparent background, game asset, limited color palette
+32x32 pixel art healer character sprite, centered full body, transparent background, game asset, limited color palette

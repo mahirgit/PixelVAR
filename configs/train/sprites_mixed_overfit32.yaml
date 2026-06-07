@@ -1,0 +1,43 @@
+run_name: var_sprites_mixed_overfit32
+seed: 42
+output_dir: outputs/runs
+checkpoint_dir: checkpoints
+checkpoint_monitor: train/loss_epoch
+log_lr: true
+matmul_precision: high
+
+data:
+  processed_dir: data/processed/sprites_mixed_real_generated
+  batch_size: 32
+  num_workers: 0
+  scale_resolutions: [1, 2, 4, 8, 16, 32]
+  max_train_samples: 32
+  max_val_samples: 32
+  return_rgb: false
+
+model:
+  vocab_size: 17
+  scale_resolutions: [1, 2, 4, 8, 16, 32]
+  d_model: 256
+  n_layers: 6
+  n_heads: 8
+  mlp_dim: 1024
+  dropout: 0.0
+
+optimizer:
+  lr: 0.001
+  weight_decay: 0.0
+  betas: [0.9, 0.95]
+
+trainer:
+  accelerator: auto
+  devices: auto
+  precision: 32-true
+  max_epochs: 400
+  log_every_n_steps: 1
+  gradient_clip_val: 1.0
+  limit_val_batches: 0
+  num_sanity_val_steps: 0
+
+logger:
+  name: csv

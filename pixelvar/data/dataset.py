@@ -16,14 +16,14 @@ from pixelvar.tokenizers import DeterministicPyramidTokenizer
 
 class PixelArtDataset(Dataset):
     """
-    Dataset of transparency-aware palette token maps.
+    Dataset of token maps.
 
     Each item returns:
-        - ``index_map``: ``(32, 32)`` long, values in ``[0, palette_size]``
-        - ``alpha_mask``: ``(32, 32)`` bool, True for opaque pixels
+        - ``index_map``: ``(H, W)`` long
+        - ``alpha_mask``: ``(H, W)`` bool, True for opaque pixels when available
         - ``multi_scale_maps``: list of deterministic pyramid maps
-        - ``token_sequence``: ``(1365,)`` long, coarse-to-fine tokens
-        - ``rgb_preview``: optional ``(3, 32, 32)`` float for visualization only
+        - ``token_sequence``: coarse-to-fine tokens
+        - ``rgb_preview``: optional ``(3, H, W)`` float for visualization only
     """
 
     def __init__(
@@ -48,8 +48,7 @@ class PixelArtDataset(Dataset):
         if alpha_path.exists():
             self.alpha_masks = np.load(alpha_path).astype(bool)
         else:
-            # Legacy fallback for old processed data. New preprocessing writes alpha_masks.npy.
-            self.alpha_masks = self.index_maps != 0
+            self.alpha_masks = np.ones_like(self.index_maps, dtype=bool)
 
         self.manifest = self._load_manifest()
         self.indices = self._select_indices(split)
@@ -58,11 +57,18 @@ class PixelArtDataset(Dataset):
 
         self.preview = self._load_preview() if return_rgb else None
 
-        self.palette_extractor = PaletteExtractor()
-        self.palette_extractor.load(self.processed_dir / "palette.json")
-        self.palette = self.palette_extractor.palette
-        self.palette_size = len(self.palette)
-        self.vocab_size = self.palette_size + 1
+        palette_path = self.processed_dir / "palette.json"
+        self.palette_extractor: PaletteExtractor | None = None
+        self.palette = None
+        if palette_path.exists():
+            self.palette_extractor = PaletteExtractor()
+            self.palette_extractor.load(palette_path)
+            self.palette = self.palette_extractor.palette
+            self.vocab_size = len(self.palette) + 1
+        else:
+            manifest_vocab = self.manifest.get("vocab_size")
+            self.vocab_size = int(manifest_vocab) if manifest_vocab is not None else int(self.index_maps.max()) + 1
+        self.palette_size = self.vocab_size - 1 if self.palette is not None else self.vocab_size
         self.mask_token = self.vocab_size
 
         self._validate_arrays()
@@ -163,8 +169,13 @@ class PixelArtDataset(Dataset):
             )
         if self.index_maps.ndim != 3:
             raise ValueError(f"index_maps must have shape (N, H, W), got {self.index_maps.shape}")
-        if self.index_maps.shape[1:] != (32, 32):
-            raise ValueError(f"index_maps must be 32x32, got {self.index_maps.shape[1:]}")
+        height, width = self.index_maps.shape[1:]
+        if height != width:
+            raise ValueError(f"index_maps must be square, got {height}x{width}")
+        if self.tokenizer.scale_resolutions[-1] != height:
+            raise ValueError(
+                f"final scale {self.tokenizer.scale_resolutions[-1]} does not match index_maps size {height}"
+            )
         if self.index_maps.min() < 0 or self.index_maps.max() > self.vocab_size - 1:
             raise ValueError(
                 f"token range [{self.index_maps.min()}, {self.index_maps.max()}] outside [0, {self.vocab_size - 1}]"

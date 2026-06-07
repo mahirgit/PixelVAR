@@ -12,8 +12,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pixelvar.data.palette import PaletteExtractor
-from pixelvar.data.splits import assert_no_split_leakage
-from pixelvar.utils import save_rgba_grid
+from pixelvar.data.splits import assert_no_group_split_leakage, assert_no_split_leakage
+from pixelvar.utils.render import save_rgba_grid
 
 
 def main() -> None:
@@ -58,6 +58,7 @@ def main() -> None:
         errors.append(f"manifest num_samples {manifest.get('num_samples')} != array length {len(index_maps)}")
     try:
         assert_no_split_leakage(manifest.get("samples", []))
+        assert_no_group_split_leakage(manifest.get("samples", []))
     except ValueError as exc:
         errors.append(str(exc))
 

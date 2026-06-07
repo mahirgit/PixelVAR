@@ -16,14 +16,17 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pixelvar.data.palette import PaletteExtractor
 from pixelvar.data.splits import (
+    assert_no_group_split_leakage,
     assert_no_split_leakage,
     infer_pokemon_variant,
+    make_group_splits,
     make_id_splits,
     parse_pokemon_id,
 )
 
 
 RAW_DIR = Path("data/raw")
+CURATED_DIR = Path("data/curated")
 PROCESSED_DIR = Path("data/processed")
 
 
@@ -31,6 +34,9 @@ PROCESSED_DIR = Path("data/processed")
 class ImageRecord:
     path: Path
     image: np.ndarray
+    group_id: str | None = None
+    variant: str | None = None
+    source_kind: str | None = None
 
 
 def load_images_from_dir(img_dir: Path, max_images: int | None = None) -> list[ImageRecord]:
@@ -44,13 +50,25 @@ def load_images_from_dir(img_dir: Path, max_images: int | None = None) -> list[I
     for path in tqdm(paths, desc=f"Loading {img_dir.name}"):
         try:
             image = Image.open(path).convert("RGBA")
-            records.append(ImageRecord(path=path, image=np.array(image)))
+            records.append(
+                ImageRecord(
+                    path=path,
+                    image=np.array(image),
+                    group_id=str(path.relative_to(img_dir).with_suffix("")),
+                    variant="image",
+                    source_kind="image",
+                )
+            )
         except Exception as exc:
             print(f"  [warn] Skipping {path}: {exc}")
     return records
 
 
-def load_npy_sprites(npy_path: Path, max_images: int | None = None) -> list[ImageRecord]:
+def load_npy_sprites(
+    npy_path: Path,
+    max_images: int | None = None,
+    frames_per_group: int | None = 178,
+) -> list[ImageRecord]:
     """Load sprites from a numpy array file."""
     data = np.load(npy_path)
     print(f"  Loaded {npy_path.name}: shape={data.shape}, dtype={data.dtype}")
@@ -66,7 +84,45 @@ def load_npy_sprites(npy_path: Path, max_images: int | None = None) -> list[Imag
         if image.ndim == 3 and image.shape[0] in (1, 3, 4) and image.shape[-1] not in (1, 3, 4):
             image = np.transpose(image, (1, 2, 0))
         rgba = ensure_rgba(image)
-        records.append(ImageRecord(path=Path(f"{npy_path.stem}_{idx:06d}.png"), image=rgba))
+        group_idx = idx if frames_per_group is None else idx // frames_per_group
+        frame_idx = 0 if frames_per_group is None else idx % frames_per_group
+        records.append(
+            ImageRecord(
+                path=Path(f"{npy_path.stem}_{idx:06d}.png"),
+                image=rgba,
+                group_id=f"{npy_path.stem}_{group_idx:06d}",
+                variant=f"frame_{frame_idx:04d}",
+                source_kind="npy",
+            )
+        )
+    return records
+
+
+def load_curated_dataset(dataset_name: str, max_images: int | None = None) -> list[ImageRecord]:
+    """Load frames from data/curated/{dataset}/manifest.json."""
+    curated_dir = CURATED_DIR / dataset_name
+    manifest_path = curated_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    samples = manifest.get("samples", [])
+    if max_images is not None:
+        samples = samples[:max_images]
+
+    records: list[ImageRecord] = []
+    for sample in tqdm(samples, desc=f"Loading curated {dataset_name}"):
+        image_path = curated_dir / sample["image_path"]
+        try:
+            image = Image.open(image_path).convert("RGBA")
+            records.append(
+                ImageRecord(
+                    path=image_path,
+                    image=np.array(image),
+                    group_id=str(sample.get("group_id")) if sample.get("group_id") is not None else None,
+                    variant=sample.get("variant") or sample.get("frame_id"),
+                    source_kind=sample.get("source_kind"),
+                )
+            )
+        except Exception as exc:
+            print(f"  [warn] Skipping curated sample {image_path}: {exc}")
     return records
 
 
@@ -114,13 +170,25 @@ def build_manifest(
         }
         if pokemon_id is not None:
             sample["pokemon_id"] = pokemon_id
+            sample["group_id"] = pokemon_id
             sample["variant"] = infer_pokemon_variant(record.path)
             if split_map is not None:
                 sample["split"] = split_map[pokemon_id]
+        elif record.group_id is not None:
+            sample["group_id"] = record.group_id
+            if record.variant is not None:
+                sample["variant"] = record.variant
+            if record.source_kind is not None:
+                sample["source_kind"] = record.source_kind
+            if split_map is not None:
+                sample["split"] = split_map[record.group_id]
         samples.append(sample)
 
     if split_map is not None:
-        assert_no_split_leakage(samples)
+        if dataset_name == "pokemon":
+            assert_no_split_leakage(samples)
+        else:
+            assert_no_group_split_leakage(samples)
 
     return {
         "dataset": dataset_name,
@@ -144,6 +212,7 @@ def preprocess_dataset(
     target_size: int = 32,
     alpha_threshold: int = 128,
     split_seed: int = 42,
+    reference_palette: Path | None = None,
 ) -> tuple[np.ndarray, np.ndarray, PaletteExtractor]:
     """Full preprocessing pipeline for a single dataset."""
     out_dir = PROCESSED_DIR / dataset_name
@@ -158,7 +227,13 @@ def preprocess_dataset(
 
     print("\n[1/5] Resizing images...")
     resized_records = [
-        ImageRecord(path=record.path, image=resize_rgba(record.image, target_size))
+        ImageRecord(
+            path=record.path,
+            image=resize_rgba(record.image, target_size),
+            group_id=record.group_id,
+            variant=record.variant,
+            source_kind=record.source_kind,
+        )
         for record in tqdm(records, desc="Resizing")
     ]
     resized_rgba = [record.image for record in resized_records]
@@ -170,10 +245,26 @@ def preprocess_dataset(
         (out_dir / "splits.json").write_text(json.dumps(split_map, indent=2, sort_keys=True))
         counts = {split: list(split_map.values()).count(split) for split in ("train", "val", "test")}
         print(f"  Pokemon ID splits: {counts}")
+    else:
+        group_ids = [record.group_id for record in resized_records if record.group_id is not None]
+        if group_ids:
+            split_map = make_group_splits(group_ids, seed=split_seed)
+            (out_dir / "splits.json").write_text(json.dumps(split_map, indent=2, sort_keys=True))
+            counts = {split: list(split_map.values()).count(split) for split in ("train", "val", "test")}
+            print(f"  Group splits: {counts}")
 
-    print("\n[2/5] Extracting palette from opaque pixels...")
-    extractor = PaletteExtractor(palette_size=palette_size, alpha_threshold=alpha_threshold)
-    extractor.fit(resized_rgba)
+    if reference_palette is not None:
+        print("\n[2/5] Loading reference palette...")
+        extractor = PaletteExtractor(palette_size=palette_size, alpha_threshold=alpha_threshold)
+        extractor.load(reference_palette)
+        palette_size = extractor.palette_size
+        alpha_threshold = extractor.alpha_threshold
+        print(f"  Reference palette: {reference_palette}")
+        print(f"  Loaded palette size: {palette_size}")
+    else:
+        print("\n[2/5] Extracting palette from opaque pixels...")
+        extractor = PaletteExtractor(palette_size=palette_size, alpha_threshold=alpha_threshold)
+        extractor.fit(resized_rgba)
     extractor.save(out_dir / "palette.json")
     Image.fromarray(extractor.visualize_palette()).save(out_dir / "palette_swatch.png")
 
@@ -206,6 +297,8 @@ def preprocess_dataset(
         alpha_threshold=alpha_threshold,
         split_map=split_map,
     )
+    if reference_palette is not None:
+        manifest["palette_source"] = str(reference_palette)
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
     print("\n[5/5] Saving sample previews...")
@@ -228,14 +321,27 @@ def discover_datasets(args: argparse.Namespace) -> dict[str, list[ImageRecord]]:
     datasets: dict[str, list[ImageRecord]] = {}
 
     if args.dataset in ("sprites", "all"):
+        curated_manifest = CURATED_DIR / "sprites" / "manifest.json"
+        if curated_manifest.exists():
+            records = load_curated_dataset("sprites", max_images=args.max_images)
+            if records:
+                datasets["sprites"] = records
+        elif args.dataset == "sprites":
+            print(f"[info] Curated sprites manifest not found: {curated_manifest}")
+            print("       Run: python scripts/curate_data.py --dataset sprites")
+
         sprites_dir = RAW_DIR / "sprites"
-        if sprites_dir.exists():
+        if "sprites" not in datasets and sprites_dir.exists():
             npy_files = [p for p in sorted(sprites_dir.glob("sprites_*.npy")) if "label" not in p.name]
             for npy_file in npy_files:
-                datasets[npy_file.stem] = load_npy_sprites(npy_file, max_images=args.max_images)
+                datasets[npy_file.stem] = load_npy_sprites(
+                    npy_file,
+                    max_images=args.max_images,
+                    frames_per_group=args.sprites_frames_per_group,
+                )
             if any(sprites_dir.rglob("*.png")) or any(sprites_dir.rglob("*.jpg")):
                 datasets["sprites_images"] = load_images_from_dir(sprites_dir, max_images=args.max_images)
-        else:
+        elif "sprites" not in datasets:
             print(f"[warn] Sprites directory not found: {sprites_dir}")
 
     if args.dataset in ("pokemon", "all"):
@@ -248,10 +354,19 @@ def discover_datasets(args: argparse.Namespace) -> dict[str, list[ImageRecord]]:
             print(f"[warn] Pokemon directory not found: {pokemon_base}")
 
     if args.dataset in ("opengameart", "all"):
+        curated_manifest = CURATED_DIR / "opengameart" / "manifest.json"
+        if curated_manifest.exists():
+            records = load_curated_dataset("opengameart", max_images=args.max_images)
+            if records:
+                datasets["opengameart"] = records
+        elif args.dataset == "opengameart":
+            print(f"[info] Curated OpenGameArt manifest not found: {curated_manifest}")
+            print("       Run: python scripts/curate_data.py --dataset opengameart --sheet-tile-size 32")
+
         oga_dir = RAW_DIR / "opengameart"
-        if oga_dir.exists() and any(oga_dir.rglob("*.png")):
+        if "opengameart" not in datasets and oga_dir.exists() and any(oga_dir.rglob("*.png")):
             datasets["opengameart"] = load_images_from_dir(oga_dir, max_images=args.max_images)
-        else:
+        elif "opengameart" not in datasets:
             print(f"[info] No OpenGameArt images found in {oga_dir}")
 
     return datasets
@@ -263,7 +378,19 @@ def main() -> None:
     parser.add_argument("--target-size", type=int, default=32)
     parser.add_argument("--alpha-threshold", type=int, default=128)
     parser.add_argument("--split-seed", type=int, default=42)
+    parser.add_argument(
+        "--reference-palette",
+        type=Path,
+        default=None,
+        help="Optional palette.json to reuse instead of fitting a new dataset palette.",
+    )
     parser.add_argument("--max-images", type=int, default=None)
+    parser.add_argument(
+        "--sprites-frames-per-group",
+        type=int,
+        default=178,
+        help="Fallback grouping for flat raw Sprites arrays when curation has not been run.",
+    )
     parser.add_argument(
         "--dataset",
         choices=["sprites", "pokemon", "opengameart", "all"],
@@ -284,6 +411,7 @@ def main() -> None:
             target_size=args.target_size,
             alpha_threshold=args.alpha_threshold,
             split_seed=args.split_seed,
+            reference_palette=args.reference_palette,
         )
 
     print("\n=== All preprocessing complete ===")

@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pixelvar.data.palette import PaletteExtractor
-from pixelvar.training import LitVAR
+from pixelvar.training import load_var_model_from_checkpoint
 from pixelvar.utils import load_yaml, save_rgba_grid, tokens_to_rgba
 
 
@@ -27,8 +27,8 @@ def main() -> None:
     config = load_yaml(args.config)
     processed_dir = Path(config["data"]["processed_dir"])
 
-    module = LitVAR.load_from_checkpoint(args.checkpoint)
-    tokens = module.sample(batch_size=args.num_samples, temperature=args.temperature, top_k=args.top_k)
+    model = load_var_model_from_checkpoint(args.checkpoint)
+    tokens = model.sample(batch_size=args.num_samples, temperature=args.temperature, top_k=args.top_k)
 
     palette = PaletteExtractor()
     palette.load(processed_dir / "palette.json")

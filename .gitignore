@@ -1,5 +1,6 @@
 # Data (too large for git)
 data/raw/
+data/curated/
 *.npy
 data/processed/*/samples/
 
@@ -8,6 +9,9 @@ outputs/
 checkpoints/
 lightning_logs/
 wandb/
+modal_logs/
+modal_outputs/
+modal_checkpoints/
 *.ckpt
 *.pt
 *.pth

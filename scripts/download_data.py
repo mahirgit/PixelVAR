@@ -156,7 +156,13 @@ def download_opengameart():
     out_dir = RAW_DIR / "opengameart"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    print("  OpenGameArt requires manual curation. Recommended packs:")
+    print("  Reproducible public curation is available:")
+    print("    python scripts/download_opengameart_assets.py --force")
+    print("    python scripts/preprocess_data.py --dataset opengameart --palette-size 16 \\")
+    print("      --reference-palette data/processed/sprites/palette.json")
+    print("    python scripts/check_data.py --dataset opengameart")
+    print("")
+    print("  Manual curation is still supported. Recommended packs:")
     print("  - https://opengameart.org/content/16x16-dungeon-tileset")
     print("  - https://opengameart.org/content/roguelike-characters")
     print("  - https://opengameart.org/content/tiny-16-basic")

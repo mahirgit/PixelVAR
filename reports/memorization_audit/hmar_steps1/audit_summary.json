@@ -1,0 +1,93 @@
+{
+  "processed_dir": "data/processed/sprites",
+  "generated_dir": "outputs/eval_images/hmar_steps1/hmar_steps1",
+  "num_generated": 4096,
+  "invalid_generated_pixels": 0,
+  "generated_duplicates": {
+    "count": 4096,
+    "unique": 4091,
+    "duplicate_groups": 5,
+    "duplicate_samples": 5,
+    "max_group_size": 2
+  },
+  "dataset_duplicates": {
+    "train": {
+      "count": 74664,
+      "unique": 64233,
+      "duplicate_groups": 9333,
+      "duplicate_samples": 10431,
+      "max_group_size": 3
+    },
+    "val": {
+      "count": 9360,
+      "unique": 8061,
+      "duplicate_groups": 1170,
+      "duplicate_samples": 1299,
+      "max_group_size": 3
+    },
+    "test": {
+      "count": 9288,
+      "unique": 7968,
+      "duplicate_groups": 1161,
+      "duplicate_samples": 1320,
+      "max_group_size": 3
+    },
+    "cross_split_duplicate_hashes": 0,
+    "cross_split_duplicate_samples": 0
+  },
+  "exact_matches": {
+    "train": {
+      "generated_matches": 154,
+      "generated_match_rate": 0.03759765625,
+      "unique_matching_hashes": 150
+    },
+    "val": {
+      "generated_matches": 15,
+      "generated_match_rate": 0.003662109375,
+      "unique_matching_hashes": 15
+    },
+    "test": {
+      "generated_matches": 22,
+      "generated_match_rate": 0.00537109375,
+      "unique_matching_hashes": 22
+    }
+  },
+  "nearest": {
+    "train": {
+      "mean_hamming_fraction": 0.028017520904541016,
+      "median_hamming_fraction": 0.0234375,
+      "p01_hamming_fraction": 0.0,
+      "p05_hamming_fraction": 0.0009765625,
+      "min_hamming_fraction": 0.0,
+      "exact_count": 154,
+      "within_1pct": 990,
+      "within_2pct": 1820,
+      "within_5pct": 3514,
+      "within_10pct": 4041
+    },
+    "val": {
+      "mean_hamming_fraction": 0.05168795585632324,
+      "median_hamming_fraction": 0.0498046875,
+      "p01_hamming_fraction": 0.0029296875,
+      "p05_hamming_fraction": 0.0146484375,
+      "min_hamming_fraction": 0.0,
+      "exact_count": 15,
+      "within_1pct": 125,
+      "within_2pct": 371,
+      "within_5pct": 2067,
+      "within_10pct": 3931
+    },
+    "test": {
+      "mean_hamming_fraction": 0.049828529357910156,
+      "median_hamming_fraction": 0.0478515625,
+      "p01_hamming_fraction": 0.0029296875,
+      "p05_hamming_fraction": 0.013671875,
+      "min_hamming_fraction": 0.0,
+      "exact_count": 22,
+      "within_1pct": 135,
+      "within_2pct": 397,
+      "within_5pct": 2220,
+      "within_10pct": 3965
+    }
+  }
+}

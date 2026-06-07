@@ -1,0 +1,48 @@
+run_name: vqvae_sprites_overfit32
+seed: 42
+output_dir: outputs/runs
+checkpoint_dir: checkpoints
+checkpoint_monitor: train/loss_epoch
+log_lr: true
+matmul_precision: high
+
+data:
+  processed_dir: data/processed/sprites
+  image_array: originals_rgba.npy
+  batch_size: 32
+  num_workers: 0
+  max_train_samples: 32
+  max_val_samples: 32
+
+model:
+  in_channels: 4
+  hidden_channels: 128
+  embedding_dim: 64
+  num_codes: 512
+  latent_size: 16
+  commitment_weight: 0.25
+  residual_blocks: 2
+
+loss:
+  opaque_rgb_weight: 1.0
+  transparent_rgb_weight: 0.05
+  alpha_weight: 1.0
+  code_entropy_weight: 0.02
+
+optimizer:
+  lr: 0.0003
+  weight_decay: 0.0
+  betas: [0.9, 0.95]
+
+trainer:
+  accelerator: auto
+  devices: auto
+  precision: 32-true
+  max_epochs: 300
+  log_every_n_steps: 1
+  gradient_clip_val: 1.0
+  limit_val_batches: 1.0
+  num_sanity_val_steps: 0
+
+logger:
+  name: csv
