@@ -431,22 +431,28 @@ Sunumda söylenecek ana cümle:
 
 ## Slide 21 - External Baseline Durumu
 
-External baseline için SD-piXL tarafında repo-side setup hazırlandı:
+External baseline tarafı artık sadece setup değil, ölçülmüş sonuç içeriyor:
 
-- Prompt dosyası hazırlandı.
-- Palette export script'i eklendi.
-- External image normalization script'i eklendi.
-- SD-piXL baseline preparation script'i eklendi.
-- Modal action'ları eklendi.
-- Sample sheet / evaluation pipeline yolu hazırlandı.
+| External baseline | Run status | Sonuç |
+| --- | --- | --- |
+| SD-piXL | 16-image metric batch | Valid run, ama görsel ve metrik olarak zayıf |
+| SSD-1B practical diffusion | 256-image metric run | Bazı sprite benzeri çıktılar var, ama PixelVAR'dan çok geride |
+| Pokemon sprite SDXL LoRA | 256-image metric run | En iyi external diffusion-style görsel baseline, ama yine de PixelVAR'ın gerisinde |
 
-Ama actual SD-piXL smoke veya batch run henüz tamamlanmadı.
+256-image ana external tablo:
+
+| Method | FID | KID | Precision | Recall | Coverage |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 46.4794 | 0.007480 | 0.9102 | 0.8711 | 0.8906 |
+| SSD-1B practical diffusion | 158.5819 | 0.102159 | 0.0547 | 0.4922 | 0.0352 |
+| Pokemon sprite LoRA | 154.0150 | 0.136589 | 0.1172 | 0.1211 | 0.0508 |
 
 Doğru sunum cümlesi:
 
-> External baseline pipeline'ı hazır, fakat gerçek SD-piXL üretim sonuçları
-> henüz metrik tablosuna eklenmedi. Bu yüzden external comparison tamamlandı
-> demiyoruz.
+> External baselinelar çalıştırıldı, ama dikkatli yorumlanmalı. SD-piXL task
+> olarak yakın bir related method, fakat bizim 32x32 sprite protocol'ümüzde
+> başarısız kaldı. SSD-1B ve Pokemon sprite LoRA pratik diffusion-style
+> karşılaştırmalar; ikisi de PixelVAR'ı geçemedi.
 
 ## Slide 22 - Final Sonuç Yorumu
 
@@ -460,15 +466,17 @@ Sonuçları kalite seviyesine göre dürüstçe şöyle özetleyebiliriz:
 | Flat MaskGIT | Zayıf | Mevcut setup'ta başarısız |
 | Generated/mixed data | Moderate | Dataset büyüdü ama real-val kalite artmadı |
 | Patch-VQ | Teknik olarak çalıştı | Learned-token yönünü gösterdi, ama blocky ve ana sonucu geçmedi |
-| SD-piXL external | Eksik | Setup var, actual run yok |
+| SD-piXL external | Zayıf | Actual run var; metrik ve görsel sonuçlar kötü |
+| Practical diffusion | Zayıf/moderate | Generic diffusion baseline, PixelVAR'ı geçmedi |
+| Pokemon sprite LoRA | Moderate | En iyi external diffusion-style görsel baseline, ama metrikte geride |
 
 Final claim:
 
 > PixelVAR, 32x32 pixel-art sprite generation için çalışan, palette-safe ve
 > coarse-to-fine bir generative modeldir. Şu ana kadar ölçülen modeller içinde
 > ana sprite-feature evaluator'a göre en güçlü non-memorizing sonuçtur. Ancak
-> external diffusion baseline ve 64x64 deneyleri tamamlanmadan daha geniş bir
-> SOTA iddiası yapılmamalıdır.
+> external diffusion baselinelar PixelVAR'ı geçmedi; 64x64 ve user study
+> tamamlanmadan daha geniş bir SOTA iddiası yapılmamalıdır.
 
 ## Slide 23 - Output ve Artifact Listesi
 
@@ -511,5 +519,6 @@ rağmen memorization audit onu temiz winner olmaktan çıkarıyor. Bu yüzden
 PixelVAR ve HMAR şu ana kadar daha güvenilir non-memorizing adaylar olarak
 duruyor.
 
-Eksikler açık: external SD-piXL run, bazı ablationlar, user study ve 64x64.
-Bunlar özellikle compute, altyapı ve zaman nedenleriyle sonraki aşamaya bırakıldı.
+Eksikler açık: bazı ablationlar, user study, MDIGAN için temiz protocol kararı
+ve 64x64. External diffusion-style baselinelar artık çalıştırıldı; sonuçlar
+PixelVAR lehine ama caveat'lerle sunulmalı.

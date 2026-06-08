@@ -1,6 +1,6 @@
 # PixelVAR Projesi Durum ve Sonuç Raporu
 
-Tarih: 2026-06-07
+Tarih: 2026-06-08
 
 Bu rapor, PixelVAR projesinde şu ana kadar yapılan işleri, elde edilen
 sonuçları, hangi proposal maddelerinin tamamlandığını, hangi maddelerin
@@ -50,17 +50,17 @@ Proposal'daki ana iddialar ve bizim şu anki durumumuz:
 | HMAR / masked refinement, Option B | DONE | Ayrı branch olarak implement edildi, eğitildi ve 1/2/4/8 refinement ablation yapıldı. |
 | Raster-scan AR baseline | DONE | Implement edildi ve değerlendirildi; memorization nedeniyle temiz winner değil. |
 | Flat MaskGIT baseline | DONE | Implement edildi ve değerlendirildi; mevcut ayarda başarısız oldu. |
-| FID / standard image metrics | PARTIAL DONE | Inception FID, KID, precision/recall, density/coverage, MS-SSIM evaluator eklendi ve iç modellerde çalıştırıldı. Dış baselinelar için henüz tam kullanılmadı. |
+| FID / standard image metrics | DONE | Inception FID, KID, precision/recall, density/coverage, MS-SSIM evaluator eklendi; iç modellerde ve dış baselinelarda kullanıldı. |
 | Palette Consistency Score | DONE | Evaluator içinde var ve ana modellerde `1.0000`. |
 | Edge crispness / edge density | DONE | Pixel-art-specific proxy olarak edge density raporlanıyor. |
 | Multi-scale VQ-VAE tokenizer | PARTIAL / NOT DONE | Neural VQ-VAE implement edildi ama kalite yetersiz olduğu için ana yol olmadı. Patch-VQ alternatifi denendi. Proposal'daki tam çok ölçekli VQ-VAE hedefi tamamlanmadı. |
 | Codebook size 8/16/32 ablation | NOT DONE | Sistematik 8/16/32 ablation yapılmadı. Ana sonuç 16 renk. |
 | Number-of-scales ablation | NOT DONE | Sistematik ölçek sayısı ablation'ı yapılmadı. |
 | PixDiff-PIG baseline | NOT DONE | Çalıştırılmadı. |
-| SD 1.5 LoRA + quantization baseline | NOT DONE | Henüz implement edilmedi. |
-| SD-piXL external baseline | PARTIAL DONE | Repo-side setup, Modal action ve normalization pipeline hazır; actual smoke/batch run henüz yapılmadı. |
+| SD 1.5 / LoRA + quantization baseline | PARTIAL DONE | Exact SD 1.5 LoRA yapılmadı; bunun yerine SSD-1B practical diffusion 256 ve Pokemon sprite SDXL LoRA 256 çalıştırıldı. |
+| SD-piXL external baseline | PARTIAL DONE | Repo-side setup, Modal action, smoke ve 16-image metric batch tamamlandı; sonuç zayıf olduğu için büyütülmedi. |
 | User study, n >= 20 | NOT DONE | Yapılmadı. |
-| Final report / presentation | PARTIAL DONE | Final rapor artifact'ları var; presentation deck henüz hazırlanmadı. |
+| Final report / presentation | DONE / POLISH | Final rapor, visual deck, external baseline comparison ve reproducibility dosyaları hazır; sadece sunum polish'i kalabilir. |
 
 ## 3. Veri Tarafında Ne Yapıldı?
 
@@ -532,7 +532,8 @@ Proposal'da external continuous baselines vardı:
 - SD 1.5 LoRA + quantization
 - Continuous diffusion / LoRA tarzı pratik generator
 
-Bunlar henüz çalıştırılmadı.
+Bunların hepsi aynı güçte tamamlanmadı, ama external comparison artık sadece
+"setup hazır" seviyesinde değil.
 
 Yaptığımız şey:
 
@@ -540,23 +541,24 @@ Yaptığımız şey:
 - `scripts/evaluate_image_folders.py` ile FID/KID/precision/recall/density/
   coverage/MS-SSIM ve pixel-art-specific metrikler aynı klasör formatında
   hesaplanabilir hale geldi.
-- SD-piXL için setup path hazırlandı:
-  - `scripts/export_palette_hex.py`
-  - `scripts/prepare_sd_pixl_baseline.py`
-  - `scripts/normalize_external_images.py`
-  - `configs/external/sd_pixl_prompts.txt`
-  - Modal actions: `prepare-sd-pixl-baseline`, `run-sd-pixl-smoke`,
-    `run-sd-pixl-batch`
+- SD-piXL için setup, smoke ve corrected 16-image metric batch tamamlandı.
+- SSD-1B practical diffusion baseline 64-image smoke'tan sonra 256-image metric
+  run'a büyütüldü.
+- Pokemon trainer sprite SDXL LoRA baseline 64-image smoke'tan sonra 256-image
+  metric run'a büyütüldü.
+- Consolidated tablo: `reports/final/external_baseline_comparison.md`.
 
-Ancak SD-piXL actual generation henüz run edilmedi. Bunun nedeni:
+256-image ana external sonuçları:
 
-- SD-piXL optimization-based bir yöntem; tek image için bile uzun sürebilir.
-- Büyük Hugging Face model ağırlıkları indirir.
-- Normal run birkaç saat sürebilir ve GPU credit harcar.
-- 4096 sample gibi numeric FID/KID için gerekli ölçek pratikte çok pahalıdır.
+| Method | FID | KID | Precision | Recall | Coverage |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 46.4794 | 0.007480 | 0.9102 | 0.8711 | 0.8906 |
+| SSD-1B practical diffusion | 158.5819 | 0.102159 | 0.0547 | 0.4922 | 0.0352 |
+| Pokemon sprite LoRA | 154.0150 | 0.136589 | 0.1172 | 0.1211 | 0.0508 |
 
-Bu yüzden SD-piXL şu an "wired but not benchmarked" durumunda. İlk mantıklı
-adım sadece smoke run ve qualitative sample sheet'tir.
+Yorum: External diffusion-style baselinelar görsel olarak bazı sprite benzeri
+sonuçlar üretiyor, ama PixelVAR'ın aynı 256-image protocol'deki FID, precision
+ve coverage skorlarından belirgin şekilde geride kalıyor.
 
 ## 12. Larger Dimensions, 64x64 ve Neden Ertelendi?
 
@@ -680,14 +682,17 @@ Neden:
 
 ### 14.4 External Baselines
 
-Tamamlanmadı veya partial.
+Partial ama artık ölçülmüş durumda.
 
 Durum:
 
 - Flat AR ve Flat MaskGIT internal architecture baselines olarak tamamlandı.
-- SD-piXL setup hazır ama actual run yok.
-- PixDiff-PIG yok.
-- SD 1.5 LoRA + quantization yok.
+- SD-piXL smoke ve 16-image metric batch tamamlandı; sonuç zayıf.
+- SSD-1B practical diffusion 256-image metric run tamamlandı.
+- Pokemon sprite SDXL LoRA 256-image metric run tamamlandı.
+- PixDiff-PIG için runnable public code/weights bulunamadı.
+- Exact SD 1.5 LoRA yapılmadı; yerine daha erişilebilir SDXL-family practical
+  diffusion/LoRA yolları çalıştırıldı.
 - MDIGAN incelenebilir ama conditional pose/imputation task olduğu için doğrudan
   unconditional sprite generation'a temiz uyarlamak zor.
 
@@ -696,8 +701,8 @@ Neden:
 - External baseline'lar çok farklı task/protocol kullanıyor.
 - SD-piXL per-image optimization olduğu için büyük sample benchmark pahalı.
 - LoRA/diffusion baseline prompt ve post-processing hassas.
-- Önce bizim model ve internal ablation'ların doğru çalıştığını kanıtlamak daha
-  öncelikliydi.
+- Buna rağmen iki practical diffusion-style baseline 256 image'e kadar
+  büyütüldü ve aynı evaluator ile ölçüldü.
 
 ### 14.5 User Study
 
@@ -807,29 +812,19 @@ Bu karar proposal'dan sapma ama sonuç kalitesi açısından pragmatik ve savunu
 
 Sıralı öneri:
 
-1. SD-piXL smoke run çalıştır:
+1. Final report ve presentation text'lerinde 256-image external baseline
+   sonuçlarının tutarlı kullanıldığını kontrol et.
 
-```bash
-modal run modal_train.py --action run-sd-pixl-smoke --sd-pixl-steps 250
-```
+2. MDIGAN'i ancak conditional pose/imputation protokolünü bizim unconditional
+   sprite generation task'ımıza dürüstçe uyarlayabiliyorsak dene; aksi halde
+   related work olarak cite et.
 
-2. SD-piXL output sample sheet'i indir ve görsel olarak incele.
+3. Eğer zaman varsa user study için küçük ama düzgün bir form/protocol hazırla.
 
-3. Eğer smoke iyi görünürse küçük batch dene:
+4. 64x64'i ancak 32x32 sonuçları ve external baseline anlatısı tamamen
+   kilitlendikten sonra ayrı next-stage deney olarak dene.
 
-```bash
-modal run modal_train.py --action run-sd-pixl-batch --num-samples 4 --sd-pixl-steps 1000
-```
-
-4. Practical SDXL/LoRA + quantization baseline ekle. Bu SD-piXL'den daha hızlı
-   sample üretebilir ve external comparison için daha ölçeklenebilir olabilir.
-
-5. Eğer zaman varsa user study için küçük ama düzgün bir form/protocol hazırla.
-
-6. 64x64'i ancak final proposal maddeleri ve external baseline'lar daha temiz
-   olduktan sonra dene.
-
-7. Final presentation deck hazırla.
+5. Final presentation deck'i latest comparison tablolarıyla polish et.
 
 ## 18. Final Değerlendirme
 
@@ -847,7 +842,7 @@ Implementation açısından proje core olarak güçlü bir noktada:
 Eksikler de net:
 
 - Proposal'daki exact VQ-VAE tokenizer tamamlanmadı.
-- External diffusion baselines tamamlanmadı.
+- External diffusion baselines tamamlandı ama protocol caveat'leriyle raporlanmalı.
 - User study yok.
 - 8/16/32 codebook ablation yok.
 - Scale-count ablation yok.
@@ -859,7 +854,6 @@ Bu yüzden raporda en dürüst claim şu olmalı:
 > için proposal'ın ana coarse-to-fine fikrini başarıyla gerçekleştirdi. HMAR,
 > learned-token ve dataset-mixing ablation'ları denendi; fakat ana real-only
 > palette-token VAR en güçlü non-memorizing proposal-path sonucu olarak kaldı.
-> Proposal'daki exact VQ-VAE tokenizer, external baselines ve user study ise
+> Proposal'daki exact VQ-VAE tokenizer, user study ve bazı ablationlar ise
 > zaman, altyapı ve kalite gate nedenleriyle tamamlanamadı veya future work
 > olarak kaldı.
-

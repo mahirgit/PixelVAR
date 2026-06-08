@@ -48,13 +48,13 @@ recall, density, and coverage.
 | SD-piXL metrics | `reports/external_eval/main_vs_sd_pixl_16/metrics.csv` |
 | SD-piXL report | `reports/external_eval/main_vs_sd_pixl_16/evaluation_report.md` |
 | SD-piXL sample sheet | `reports/final/sd_pixl_sample_sheet.png` |
-| SSD-1B practical diffusion metrics | `reports/external_eval/main_vs_practical_diffusion_64/metrics.csv` |
-| SSD-1B practical diffusion report | `reports/external_eval/main_vs_practical_diffusion_64/evaluation_report.md` |
+| SSD-1B practical diffusion 64 smoke metrics | `reports/external_eval/main_vs_practical_diffusion_64/metrics.csv` |
+| SSD-1B practical diffusion 64 smoke report | `reports/external_eval/main_vs_practical_diffusion_64/evaluation_report.md` |
 | SSD-1B practical diffusion 256 metrics | `reports/external_eval/main_vs_practical_diffusion_256/metrics.csv` |
 | SSD-1B practical diffusion 256 report | `reports/external_eval/main_vs_practical_diffusion_256/evaluation_report.md` |
 | SSD-1B practical diffusion sample sheet | `reports/final/practical_diffusion_sample_sheet.png` |
-| Pokemon sprite LoRA metrics | `reports/external_eval/main_vs_pokemon_sprite_lora_64/metrics.csv` |
-| Pokemon sprite LoRA report | `reports/external_eval/main_vs_pokemon_sprite_lora_64/evaluation_report.md` |
+| Pokemon sprite LoRA 64 smoke metrics | `reports/external_eval/main_vs_pokemon_sprite_lora_64/metrics.csv` |
+| Pokemon sprite LoRA 64 smoke report | `reports/external_eval/main_vs_pokemon_sprite_lora_64/evaluation_report.md` |
 | Pokemon sprite LoRA 256 metrics | `reports/external_eval/main_vs_pokemon_sprite_lora_256/metrics.csv` |
 | Pokemon sprite LoRA 256 report | `reports/external_eval/main_vs_pokemon_sprite_lora_256/evaluation_report.md` |
 | Pokemon sprite LoRA sample sheet | `reports/final/pokemon_sprite_lora_sample_sheet.png` |

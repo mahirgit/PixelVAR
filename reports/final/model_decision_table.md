@@ -2,6 +2,9 @@
 
 Lower feature scores are better. Rows marked comparable use the shared real Sprites validation palette-token evaluator. Patch-VQ uses a decoded RGBA evaluator, and generated-keep uses its own generated validation reference, so those scores are not direct winner comparisons.
 
+This table ranks internal project branches. External baselines are tracked in
+`reports/final/external_baseline_comparison.md`.
+
 | Rank | Branch | Best score | Setting | Comparable | Decision |
 | ---: | --- | ---: | --- | --- | --- |
 | 1 | Real-only VAR | `0.00147` | temp=0.8, top_k=8 | yes | WINNER / main result |

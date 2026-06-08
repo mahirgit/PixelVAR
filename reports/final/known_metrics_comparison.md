@@ -5,6 +5,10 @@ per method and the same validation reference folder.
 
 Feature space: Inception V3.
 
+This table is for internal architecture baselines only. External diffusion-style
+baselines are summarized separately in
+`reports/final/external_baseline_comparison.md`.
+
 | Method | FID lower | KID lower | Precision higher | Recall higher | Density higher | Coverage higher | MS-SSIM lower | Exact match lower |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Flat raster AR | 9.3558 | 0.002975 | 0.9172 | 0.9541 | 0.7654 | 0.8518 | 0.8281 | 0.0112 |

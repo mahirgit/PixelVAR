@@ -503,18 +503,28 @@ sayarken bunları ayrı model olarak saymamak daha doğru.
 ### SD-piXL
 
 SD-piXL external baseline olarak araştırıldı ve repo tarafında pipeline setup'ı
-hazırlandı. Ama model bizim modelimiz değil. Ayrıca actual smoke/batch run henüz
-tamamlanmadı.
+hazırlandı. Model bizim modelimiz değil; sadece external comparison için
+kullanıldı. Daha sonra smoke ve corrected 16-image metric batch çalıştırıldı.
+Sonuç görsel ve metrik olarak zayıf kaldı, bu yüzden büyük batch'e
+büyütülmedi.
 
 Durum:
 
-- Setup: partial done
-- Actual generation: not done
-- Metrics table'a ekleme: not done
+- Setup: done
+- Actual generation: done, 16-image metric batch
+- Metrics table'a ekleme: done
+- Karar: serious attempted external baseline, competitive değil
 
 ### SD 1.5 LoRA + Quantization
 
-Proposal'da dış baseline olarak vardı, ama implement edilmedi.
+Proposal'da dış baseline olarak vardı. Exact SD 1.5 LoRA yapılmadı; pratik ve
+erişilebilir alternatif olarak iki diffusion-style external baseline çalıştırıldı:
+
+- `segmind/SSD-1B` practical diffusion, 256-image metric run
+- `sWizad/pokemon-trainer-sprite-pixelart` SDXL LoRA, 256-image metric run
+
+İkisi de aynı 32x32 normalization ve evaluator protocol'ünden geçirildi. İkisi
+de bazı sprite benzeri çıktılar üretse de PixelVAR'ı geçmedi.
 
 ### PixDiff-PIG
 
@@ -546,6 +556,9 @@ yaklaştı. Fakat sprite-feature evaluator'da PixelVAR'ı geçemedi. Daha fazla
 refinement step'in kaliteyi artırmadığını da gördük.
 
 Son olarak baseline tarafını güçlendirdik. Flat AR ve Flat MaskGIT yazıldı.
+External tarafta SD-piXL, SSD-1B practical diffusion ve Pokemon sprite SDXL
+LoRA çalıştırıldı. Bu external modeller bizim modelimiz değil; sadece
+karşılaştırma noktası olarak raporlandı.
 Flat MaskGIT zayıf kaldı. Flat AR ise raw FID/KID metriklerinde çok iyi çıktı,
 ama memorization audit'te açık şekilde ezberlediği görüldü. Bu yüzden temiz
 winner olarak kabul edilmedi.
@@ -571,4 +584,3 @@ deneyleri dataset büyütmenin tek başına kaliteyi artırmadığını gösterd
 | HMARTransformer | Güçlü ablation, ana modeli geçmedi |
 | FlatARTransformer | Memorizing baseline |
 | FlatMaskGITTransformer | Başarısız baseline |
-

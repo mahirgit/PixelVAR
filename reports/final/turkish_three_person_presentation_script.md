@@ -467,8 +467,9 @@ metriklerini ekledik.
 - Flat raster autoregressive baseline
 - Flat MaskGIT baseline
 
-External baseline tarafında SD-piXL için repo-side setup yaptık, ama actual run
-henüz tamamlanmadı. Bunu birazdan nedenleriyle anlatacağım.
+External baseline tarafında artık sadece setup değil, gerçek run sonuçları da var.
+SD-piXL, SSD-1B practical diffusion ve Pokemon sprite SDXL LoRA aynı 32x32
+normalization protocol'ünden geçirildi. Bunu birazdan caveat'leriyle anlatacağım.
 
 ### Kullandığımız bilinen metrikler
 
@@ -606,13 +607,28 @@ Bu yüzden SD-piXL tarafını araştırdık ve repo içinde setup hazırladık:
 - SD-piXL baseline preparation script'i eklendi.
 - Modal action'ları eklendi.
 - Normalized output ve sample sheet pipeline'ı hazırlandı.
+- SD-piXL smoke ve corrected 16-image metric batch çalıştırıldı.
 
-Ama actual SD-piXL smoke/batch run henüz tamamlanmadı. Yani dış baseline için
-kod ve komut altyapısı var, ama sonuç tablosuna girecek gerçek SD-piXL sample'ı
-henüz üretmedik.
+Sonuç: SD-piXL bizim protocol'de zayıf çıktı. Görsel olarak centered sprite
+yerine daha çok noisy/tiled bloklar üretti. Bu yüzden bunu competitive bir
+baseline gibi değil, serious attempted external baseline gibi sunmalıyız.
 
-Bunu saklamamak gerekiyor. Sunumda "external baseline setup completed, actual
-run pending" diye açık söylemeliyiz.
+Bunun yanında iki practical diffusion-style baseline daha çalıştırıldı:
+
+- `segmind/SSD-1B` practical diffusion, 256-image metric run
+- Pokemon trainer sprite SDXL LoRA, 256-image metric run
+
+256-image tabloda ana sonuç şöyle:
+
+| Method | FID | KID | Precision | Recall | Coverage |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 46.4794 | 0.007480 | 0.9102 | 0.8711 | 0.8906 |
+| SSD-1B practical diffusion | 158.5819 | 0.102159 | 0.0547 | 0.4922 | 0.0352 |
+| Pokemon sprite LoRA | 154.0150 | 0.136589 | 0.1172 | 0.1211 | 0.0508 |
+
+Bunu saklamamak gerekiyor. Sunumda doğru ifade şu: "External baselinelar
+çalıştırıldı, ama task/protocol farkları nedeniyle dikkatli yorumlanmalı. Bu
+protocol'de hiçbiri PixelVAR'ı geçmedi."
 
 ### Neden bazı proposal maddeleri tamamlanmadı?
 
@@ -625,10 +641,8 @@ Tamamlanmayan veya partial kalan ana maddeler:
 - 32-color veya 8/16/32 codebook ablation
 - Number-of-scales ablation
 - PixDiff-PIG baseline
-- SD 1.5 LoRA + quantization baseline
-- SD-piXL actual external run
+- Exact SD 1.5 LoRA + quantization baseline
 - User study, n >= 20
-- Final presentation deck
 - 64x64 veya larger dimension experiments
 
 ### VQ-VAE neden ana yol olmadı?
@@ -734,9 +748,11 @@ Flat MaskGIT zayıf. Mevcut setup'ta beklediğimiz kaliteye yaklaşmadı.
 Mixed/generated data sonuçları moderate. Büyük veri ve iyi token accuracy var,
 ama ana gerçek validation kalitesini artırmadı.
 
-External baseline tarafı incomplete. Setup var, ama gerçek karşılaştırma sonucu
-henüz yok. Bu yüzden "external models ile karşılaştırdık" demek doğru olmaz.
-Doğru ifade: "external baseline pipeline'ı hazırlandı, actual run pending."
+External baseline tarafı artık incomplete değil, ama caveat'li. SD-piXL,
+SSD-1B practical diffusion ve Pokemon sprite LoRA çalıştırıldı. Doğru ifade:
+"External baselinelar ile karşılaştırdık; fakat task/protocol farkları nedeniyle
+sonuçları doğrudan SOTA claim gibi değil, controlled external attempts olarak
+sunuyoruz."
 
 ### Önemli dikkat noktaları
 
@@ -764,15 +780,13 @@ Beşincisi, 64x64 ertelendi çünkü maliyet ve zaman büyüyordu. Bu kaçınma 
 
 Implementation açısından en mantıklı sonraki adımlar:
 
-1. SD-piXL external baseline actual smoke run yapmak.
-2. Eğer smoke başarılıysa batch generation çalıştırmak.
-3. SD-piXL output'larını aynı 32x32 normalization pipeline'ından geçirmek.
-4. PixelVAR, HMAR, Flat AR, MaskGIT ve SD-piXL için aynı metrik tablosunu
-   yeniden üretmek.
-5. External baseline için sample sheet hazırlamak.
-6. Final raporda "internal baseline" ve "external baseline" ayrımını net yapmak.
-7. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney eklemek.
-8. 64x64 için sadece küçük pilot run planlamak; full training'i ancak 32x32
+1. Final rapor ve presentation text'lerinde latest 256-image external sonuçları
+   tutarlı kullanmak.
+2. MDIGAN'i ancak conditional pose/imputation protocol'ünü bizim task'a dürüstçe
+   uyarlayabiliyorsak denemek; aksi halde related work olarak bırakmak.
+3. Zaman kalırsa user study için küçük ama düzgün bir form/protocol hazırlamak.
+4. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney eklemek.
+5. 64x64 için sadece küçük pilot run planlamak; full training'i ancak 32x32
    final comparison bittikten sonra yapmak.
 
 ### Kişi 3'ün kapanış mesajı
@@ -783,8 +797,8 @@ Genel olarak proje proposal'ın ana fikrini çalışan bir sisteme dönüştürd
 32x32 PixelVAR modeli var, HMAR alternatifi var, baselinelar var, metrikler var,
 memorization audit var ve 170K generation hedefi tamamlandı.
 
-Ama hâlâ eksikler var. En büyük eksikler external baseline'ın gerçek run'ı,
-proposal'daki VQ-VAE/tokenizer ablation tarafının tamamlanmaması, user study ve
+Ama hâlâ eksikler var. En büyük eksikler proposal'daki exact VQ-VAE/tokenizer
+ablation tarafının tamamlanmaması, user study, bazı sistematik ablationlar ve
 larger dimension deneyleri. Bunları tamamlayamama nedenimiz ise temelde compute
 ve altyapı sınırlamaları, veri erişimi problemleri ve önce ana 32x32 proposal
 sonucunu sağlamlaştırma önceliğiydi.
@@ -793,7 +807,7 @@ Bu yüzden final iddiayı abartmadan kurmalıyız:
 
 "PixelVAR, 32x32 pixel-art sprite generation için palette-safe ve coarse-to-fine
 çalışan bir model olarak başarılıdır. En güçlü non-memorizing adaylardan biridir.
-Ancak external diffusion baseline ve larger-resolution experiments tamamlanmadan
+Ancak user study ve larger-resolution experiments tamamlanmadan
 daha geniş bir SOTA iddiası yapılmamalıdır."
 
 ## Üç Kişi Arasında Net Paylaşım
@@ -875,8 +889,8 @@ metriklerde en iyi görünse bile memorization audit nedeniyle temiz winner değ
 Bu yüzden sonuçları sadece tablo üzerinden değil, audit ile birlikte yorumlamak
 gerekiyor.
 
-Eksik kalan taraflar açık: external baseline actual run, bazı ablationlar, user
-study ve 64x64 denemeleri. Bunlar compute, altyapı ve zaman nedeniyle ertelendi.
-Bir sonraki en mantıklı adım, SD-piXL external baseline'ı gerçekten çalıştırıp
-aynı evaluator ile tabloya eklemek. Ondan sonra 64x64 gibi daha pahalı
-deneylere geçmek daha savunulabilir olur.
+Eksik kalan taraflar açık: bazı ablationlar, user study, MDIGAN için temiz
+protocol kararı ve 64x64 denemeleri. Bunlar compute, altyapı ve zaman nedeniyle
+ertelendi. External baselinelar artık aynı evaluator ile tabloya eklendi; bundan
+sonraki en mantıklı adım final sunum metnini bu latest tabloya göre kilitlemek
+ve sonra 64x64 gibi daha pahalı deneylere geçip geçmemeye karar vermek.

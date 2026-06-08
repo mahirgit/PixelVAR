@@ -437,13 +437,14 @@ Presentation line:
 
 ## Slide 21 - External Baseline Status
 
-Two external baselines have now been run through the shared 32x32 image-folder
+Three external baselines have now been run through the shared 32x32 image-folder
 protocol:
 
 | External baseline | Run status | Result |
 | --- | --- | --- |
 | SD-piXL | 16-image metric batch | Valid run, but visually poor and far behind PixelVAR |
 | Practical diffusion / SSD-1B | 256-image metric run | Recognizable sprites sometimes, but much worse than PixelVAR |
+| Pokemon sprite SDXL LoRA | 256-image metric run | Best external diffusion-style visual baseline, still far behind PixelVAR |
 
 SD-piXL is the more targeted related method because it is explicitly about
 pixel-art-like score-distillation generation. However, under our fixed-prompt
@@ -454,8 +455,9 @@ Correct presentation wording:
 
 > We ran external baselines, but they should be presented carefully. SD-piXL is
 > a serious targeted attempt, yet it fails under our adapted 32x32 sprite
-> protocol. SSD-1B is a practical generic diffusion comparison and should remain
-> secondary.
+> protocol. SSD-1B and the Pokemon sprite LoRA are practical diffusion-style
+> comparisons; both are useful, but neither beats PixelVAR under the shared
+> evaluator.
 
 ## Slide 22 - Final Result Interpretation
 
@@ -526,7 +528,8 @@ The most important caution is Flat AR: it looks strongest on raw FID/KID, but
 the memorization audit disqualifies it as a clean winner. PixelVAR and HMAR are
 therefore the more reliable non-memorizing candidates measured so far.
 
-The remaining gaps are clear: actual external SD-piXL run, more ablations, user
-study, and 64x64 experiments. These were postponed because of compute,
-infrastructure, and time constraints, and because the 32x32 proposal result had
-to be made complete first.
+The remaining gaps are clear: more ablations, user study, MDIGAN only if a clean
+conditional-to-unconditional adaptation is justified, and 64x64 experiments.
+These were postponed because of compute, infrastructure, and time constraints,
+and because the 32x32 proposal result and external-baseline section had to be
+made complete first.
