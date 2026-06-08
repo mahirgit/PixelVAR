@@ -528,8 +528,10 @@ The most important caution is Flat AR: it looks strongest on raw FID/KID, but
 the memorization audit disqualifies it as a clean winner. PixelVAR and HMAR are
 therefore the more reliable non-memorizing candidates measured so far.
 
-The remaining gaps are clear: more ablations, user study, MDIGAN only if a clean
-conditional-to-unconditional adaptation is justified, and 64x64 experiments.
-These were postponed because of compute, infrastructure, and time constraints,
+The remaining gaps are clear: more ablations, user study, and 64x64
+experiments. MDIGAN has been reviewed and should be cited as related work rather
+than used as a direct numeric baseline, because it solves conditional
+paired-pose imputation instead of unconditional sprite generation. The remaining
+items were postponed because of compute, infrastructure, and time constraints,
 and because the 32x32 proposal result and external-baseline section had to be
 made complete first.

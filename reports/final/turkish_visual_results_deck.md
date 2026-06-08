@@ -519,6 +519,7 @@ rağmen memorization audit onu temiz winner olmaktan çıkarıyor. Bu yüzden
 PixelVAR ve HMAR şu ana kadar daha güvenilir non-memorizing adaylar olarak
 duruyor.
 
-Eksikler açık: bazı ablationlar, user study, MDIGAN için temiz protocol kararı
-ve 64x64. External diffusion-style baselinelar artık çalıştırıldı; sonuçlar
-PixelVAR lehine ama caveat'lerle sunulmalı.
+Eksikler açık: bazı ablationlar, user study ve 64x64. MDIGAN incelendi ve
+conditional paired-pose imputation task olduğu için ana numeric baseline değil,
+related work olarak bırakıldı. External diffusion-style baselinelar artık
+çalıştırıldı; sonuçlar PixelVAR lehine ama caveat'lerle sunulmalı.

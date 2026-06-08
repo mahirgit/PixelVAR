@@ -24,6 +24,7 @@ The final branch comparison and sample sheets are in:
 - `reports/final/final_branch_comparison_sheet.png`
 - `reports/final/final_main_var_sample_sheet.png`
 - `reports/final/external_baseline_and_metrics_plan.md`
+- `reports/final/mdigan_decision.md`
 
 ## What Was Compared
 
@@ -44,8 +45,10 @@ baselines include HMAR, flat raster AR, and flat MaskGIT. The external baselines
 include SD-piXL, practical diffusion / SSD-1B, and a Pokemon trainer sprite SDXL
 LoRA, all normalized to the same 32x32 PNG protocol before evaluation. SSD-1B
 practical diffusion and Pokemon sprite LoRA were both scaled to 256-image runs
-and remain below PixelVAR under the shared evaluator. MDIGAN, PixDiff-PIG, a
-user study, and 64x64 generation remain future work.
+and remain below PixelVAR under the shared evaluator. MDIGAN was reviewed and
+classified as related work rather than a direct numeric baseline because its
+protocol is conditional paired-pose imputation. PixDiff-PIG, a user study, and
+64x64 generation remain future work.
 
 ## Metrics Used
 

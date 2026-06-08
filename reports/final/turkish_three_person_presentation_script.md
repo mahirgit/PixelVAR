@@ -780,13 +780,12 @@ Beşincisi, 64x64 ertelendi çünkü maliyet ve zaman büyüyordu. Bu kaçınma 
 
 Implementation açısından en mantıklı sonraki adımlar:
 
-1. Final rapor ve presentation text'lerinde latest 256-image external sonuçları
-   tutarlı kullanmak.
-2. MDIGAN'i ancak conditional pose/imputation protocol'ünü bizim task'a dürüstçe
-   uyarlayabiliyorsak denemek; aksi halde related work olarak bırakmak.
-3. Zaman kalırsa user study için küçük ama düzgün bir form/protocol hazırlamak.
-4. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney eklemek.
-5. 64x64 için sadece küçük pilot run planlamak; full training'i ancak 32x32
+1. MDIGAN'i related work olarak bırakmak; çünkü conditional paired-pose
+   imputation task'ı bizim unconditional generation protokolümüzle doğrudan adil
+   karşılaştırılamıyor.
+2. Zaman kalırsa user study için küçük ama düzgün bir form/protocol hazırlamak.
+3. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney eklemek.
+4. 64x64 için sadece küçük pilot run planlamak; full training'i ancak 32x32
    final comparison bittikten sonra yapmak.
 
 ### Kişi 3'ün kapanış mesajı
@@ -889,8 +888,11 @@ metriklerde en iyi görünse bile memorization audit nedeniyle temiz winner değ
 Bu yüzden sonuçları sadece tablo üzerinden değil, audit ile birlikte yorumlamak
 gerekiyor.
 
-Eksik kalan taraflar açık: bazı ablationlar, user study, MDIGAN için temiz
-protocol kararı ve 64x64 denemeleri. Bunlar compute, altyapı ve zaman nedeniyle
-ertelendi. External baselinelar artık aynı evaluator ile tabloya eklendi; bundan
-sonraki en mantıklı adım final sunum metnini bu latest tabloya göre kilitlemek
-ve sonra 64x64 gibi daha pahalı deneylere geçip geçmemeye karar vermek.
+Eksik kalan taraflar açık: bazı ablationlar, user study ve 64x64 denemeleri.
+Bunlar compute, altyapı ve zaman nedeniyle ertelendi. MDIGAN incelendi ama ana
+numeric baseline yapılmadı; çünkü aynı karakterin başka pose'larını input olarak
+isteyen conditional imputation protokolü PixelVAR'ın unconditional generation
+protokolüyle doğrudan adil karşılaştırılamıyor. External baselinelar artık aynı
+evaluator ile tabloya eklendi; bundan sonraki en mantıklı adım final sunum
+metnini bu latest tabloya göre kilitlemek ve sonra 64x64 gibi daha pahalı
+deneylere geçip geçmemeye karar vermek.

@@ -693,14 +693,16 @@ Durum:
 - PixDiff-PIG için runnable public code/weights bulunamadı.
 - Exact SD 1.5 LoRA yapılmadı; yerine daha erişilebilir SDXL-family practical
   diffusion/LoRA yolları çalıştırıldı.
-- MDIGAN incelenebilir ama conditional pose/imputation task olduğu için doğrudan
-  unconditional sprite generation'a temiz uyarlamak zor.
+- MDIGAN incelendi; conditional pose/imputation task olduğu için ana numeric
+  baseline tablosuna eklenmedi ve related work olarak bırakıldı.
 
 Neden:
 
 - External baseline'lar çok farklı task/protocol kullanıyor.
 - SD-piXL per-image optimization olduğu için büyük sample benchmark pahalı.
 - LoRA/diffusion baseline prompt ve post-processing hassas.
+- MDIGAN input olarak aynı karakterin başka pose'larını istediği için PixelVAR'ın
+  unconditional generation protokolüyle doğrudan adil karşılaştırılamıyor.
 - Buna rağmen iki practical diffusion-style baseline 256 image'e kadar
   büyütüldü ve aynı evaluator ile ölçüldü.
 
@@ -784,6 +786,7 @@ Bu karar proposal'dan sapma ama sonuç kalitesi açısından pragmatik ve savunu
 - `reports/final/known_metrics_comparison.md`
 - `reports/final/memorization_audit_summary.md`
 - `reports/final/external_baseline_and_metrics_plan.md`
+- `reports/final/mdigan_decision.md`
 - `reports/final/reproducibility_commands.md`
 - `reports/option_a_progress_report.md`
 
@@ -812,19 +815,14 @@ Bu karar proposal'dan sapma ama sonuç kalitesi açısından pragmatik ve savunu
 
 Sıralı öneri:
 
-1. Final report ve presentation text'lerinde 256-image external baseline
-   sonuçlarının tutarlı kullanıldığını kontrol et.
+1. User study için küçük ama düzgün bir form/protocol hazırla.
 
-2. MDIGAN'i ancak conditional pose/imputation protokolünü bizim unconditional
-   sprite generation task'ımıza dürüstçe uyarlayabiliyorsak dene; aksi halde
-   related work olarak cite et.
+2. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney ekle.
 
-3. Eğer zaman varsa user study için küçük ama düzgün bir form/protocol hazırla.
-
-4. 64x64'i ancak 32x32 sonuçları ve external baseline anlatısı tamamen
+3. 64x64'i ancak 32x32 sonuçları ve external baseline anlatısı tamamen
    kilitlendikten sonra ayrı next-stage deney olarak dene.
 
-5. Final presentation deck'i latest comparison tablolarıyla polish et.
+4. Final presentation deck'i latest comparison tablolarıyla polish et.
 
 ## 18. Final Değerlendirme
 

@@ -39,6 +39,8 @@ without mixing the individual run notes.
 2. `A Missing Data Imputation GAN for Character Sprite Generation` / MDIGAN
    - Why: direct character sprite generation with released code.
    - Caveat: also pose-imputation rather than unconditional sampling.
+   - Decision: cite as related work, not as a main numeric baseline for the
+     current unconditional 32x32 PixelVAR comparison.
    - Paper: https://arxiv.org/abs/2409.10721
    - Code: https://github.com/fegemo/mdigan-characters
 
@@ -92,6 +94,27 @@ without mixing the individual run notes.
 
 This tier is useful for a demo/report, but it should not be the only external
 comparison because it is sensitive to prompts and post-processing.
+
+## MDIGAN Decision
+
+MDIGAN was reviewed after the external diffusion-style baselines were completed.
+The decision is to keep it as related work rather than forcing it into the main
+numeric comparison.
+
+Reason: MDIGAN is a conditional missing-pose imputation model. It receives one
+or more poses of the same character and generates the missing target pose. The
+official setup expects paired domain folders such as `0-back`, `1-left`,
+`2-front`, and `3-right`, with matched character examples across domains. Our
+current PixelVAR result is an unconditional 32x32 sprite generator evaluated on
+independent generated samples against a validation distribution.
+
+A direct MDIGAN row would therefore compare a model with privileged
+character-specific input poses against a model that samples from scratch. That is
+not a fair main-table baseline. If MDIGAN is run later, it should be a separate
+conditional pose-imputation experiment with its own paired-pose protocol and
+paired reconstruction metrics.
+
+Detailed decision note: `reports/final/mdigan_decision.md`
 
 ## Metrics to Report
 
@@ -577,5 +600,6 @@ failures.
 14. Done: scaled the Pokemon sprite LoRA to a 256-image metric run.
 15. Done: scaled the SSD-1B practical diffusion baseline to a 256-image metric
     run.
-16. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
-   otherwise cite it as related work rather than a direct numeric baseline.
+16. Done: reviewed MDIGAN. Because it is a conditional paired-pose imputation
+    model, cite it as related work rather than using it as a direct numeric
+    baseline for the unconditional PixelVAR table.

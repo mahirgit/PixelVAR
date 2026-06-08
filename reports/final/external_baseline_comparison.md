@@ -14,6 +14,9 @@ Do not compare all rows as if they had the same statistical strength:
 - Pokemon sprite LoRA was first evaluated on `64` images, then scaled to the
   stronger `256`-image run now used as the primary practical external-generator
   result.
+- MDIGAN was reviewed and excluded from the main metric table because it is a
+  paired conditional pose-imputation method, not an unconditional sprite
+  generator. The decision note is `reports/final/mdigan_decision.md`.
 - Each external method should be compared primarily against the matching
   PixelVAR row from the same evaluation report and sample count.
 
@@ -40,6 +43,7 @@ recall, density, and coverage.
 | SD-piXL | Most research-targeted public low-resolution/color-limited baseline we could run. | Poor: noisy blocks and non-sprite outputs. | Prompt/image-conditioned optimization, not a trained unconditional sprite sampler; slow enough that scaling is not worthwhile after the failed 16-image batch. | Keep as a serious attempted research baseline, not a competitive result. |
 | SSD-1B practical diffusion | Generic SDXL-family practical baseline people expect. | Weak/moderate: some recognizable sprites, many lineup/crop/multi-character failures. | Prompt-sensitive text-to-image model; not sprite-dataset-trained. | Keep as generic practical comparison; 256-image run completed and still below PixelVAR. |
 | Pokemon sprite SDXL LoRA | Strongest accessible practical sprite-specific generator found so far. | Moderate: many centered sprites, but side fragments, frames, paired characters, and style mismatch remain. | Trained for Pokemon trainer-style sprites, not MSD Sprites; text-to-image protocol is still not architecture-equivalent to PixelVAR. | Primary practical external generator baseline; 256-image run completed and still below PixelVAR. |
+| MDIGAN | Strong related work for pixel-art character pose completion. | Not run in this table. | Requires paired character poses as input and predicts a missing target pose; PixelVAR is evaluated as unconditional generation. | Cite as related work, not a direct numeric baseline. |
 
 ## Artifact Links
 
@@ -58,6 +62,7 @@ recall, density, and coverage.
 | Pokemon sprite LoRA 256 metrics | `reports/external_eval/main_vs_pokemon_sprite_lora_256/metrics.csv` |
 | Pokemon sprite LoRA 256 report | `reports/external_eval/main_vs_pokemon_sprite_lora_256/evaluation_report.md` |
 | Pokemon sprite LoRA sample sheet | `reports/final/pokemon_sprite_lora_sample_sheet.png` |
+| MDIGAN decision note | `reports/final/mdigan_decision.md` |
 
 ## Bottom Line
 
@@ -67,4 +72,6 @@ practical external visual baseline, but the 256-image runs confirm that neither
 practical generator closes the gap. SSD-1B practical diffusion reaches FID
 `158.5819` and coverage `0.0352`; Pokemon sprite LoRA reaches FID `154.0150`
 and coverage `0.0508`; PixelVAR's matching 256-image row is FID `46.4794` and
-coverage `0.8906`.
+coverage `0.8906`. MDIGAN is not missing from the metric table by oversight: it
+was reviewed and intentionally left as related work because it solves a
+conditional paired-pose imputation task.
