@@ -1,9 +1,11 @@
 # PixelVAR 10-Minute Speaker Guide
 
-Use `reports/final/pixelvar_final_presentation_10min_story.pptx` for the live talk.
+Use `reports/final/pixelvar_final_presentation_10min_story_with_comparisons.pptx` for the live talk.
 Use `reports/final/pixelvar_final_presentation_master_evidence.pptx` only as the full evidence archive.
 
 Do not present `main` as the final code state. The final working branch is `codex/pixelvar-external-baselines`.
+
+The live talk is still slides 1-12. Slides 13-31 are Q&A backup only; slides 29-31 are optional extra visual/metric comparison slides if someone asks for more sample evidence or more numbers.
 
 ## Story Spine
 
@@ -27,6 +29,18 @@ Pixel art is discrete. Continuous generators miss palette and transparency const
 | 12 | P1 | 0:55 | Limitations, next proof, bounded final claim |
 
 Total planned time: about 9:40.
+
+## Extra Backup Slides
+
+Slides 29-31 were added as optional evidence:
+
+| Slide | Use |
+|---:|---|
+| 29 | Internal sample comparison across Real-only VAR, HMAR, generated-keep, mixed data, OpenGameArt-mixed, and Patch-VQ |
+| 30 | Baseline sample comparison across PixelVAR/HMAR/Flat AR/MaskGIT plus SD-piXL, SSD-1B, and Pokemon LoRA |
+| 31 | Expanded metric scoreboard for internal known metrics and external normalized rows |
+
+Use these only in Q&A. Do not insert them into the timed 10-minute flow unless the presentation time limit changes.
 
 ## Presenter Split
 
