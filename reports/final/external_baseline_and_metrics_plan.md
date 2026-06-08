@@ -13,6 +13,9 @@ We have compared these completed branches:
 - OpenGameArt-mixed VAR
 - Generated-keep VAR
 - Patch-VQ VAR
+- SD-piXL external baseline
+- SSD-1B practical diffusion baseline
+- Pokemon trainer sprite SDXL LoRA baseline
 
 The main score used so far is a lightweight Frechet distance over sprite
 features. It is useful for choosing among our branches, but it is not enough on
@@ -42,18 +45,34 @@ its own for a serious paper-style comparison.
    - Paper: https://arxiv.org/abs/2410.06236
    - Code: https://github.com/AlexandreBinninger/SD-piXL
 
+4. `PixDiff-PIG`
+   - Why: direct palette-informed diffusion for pixel-art generation.
+   - Caveat: searched as a targeted next baseline, but no runnable public
+     repository or weights were found. Treat as related work unless code is
+     released or the authors provide it.
+   - Article: https://www.researchgate.net/publication/398825200_PixDiff-PIG_Palette-Informed_Diffusion_for_Pixel_Art_Generation
+
+5. `achsaf/vq-diffusion-pixelart-16x16`
+   - Why: architecture-adjacent discrete diffusion over 16x16 pixel-art
+     character tokens.
+   - Caveat: the model card is relevant, but the model files returned HTTP 401
+     during this run, so it could not be downloaded or evaluated. It is also
+     native 16x16, so even if access becomes available it must be clearly framed
+     as a lower-resolution baseline.
+   - Model card: https://huggingface.co/achsaf/vq-diffusion-pixelart-16x16
+
 ### Tier 2: Architecture-Adjacent Baselines
 
-4. Flat raster-scan autoregressive transformer
+6. Flat raster-scan autoregressive transformer
    - Why: the standard next-token baseline that VAR claims to improve over.
    - Caveat: we should implement this locally on the same palette tokens.
 
-5. Flat MaskGIT
+7. Flat MaskGIT
    - Why: known masked image-token baseline and closest contrast to HMAR.
    - Caveat: we should implement this locally on the same palette tokens.
    - Paper: https://arxiv.org/abs/2202.04200
 
-6. Patch-VQ/VQGAN-style token baseline
+8. Patch-VQ/VQGAN-style token baseline
    - Why: checks whether learned visual tokens beat deterministic palette
      tokens.
    - Caveat: our first patch-VQ branch was visibly blockier and used a separate
@@ -61,7 +80,7 @@ its own for a serious paper-style comparison.
 
 ### Tier 3: Practical External Generator Baseline
 
-7. SDXL or Stable Diffusion pixel-art LoRA + quantization
+9. SDXL or Stable Diffusion pixel-art LoRA + quantization
    - Why: a practical external baseline people will expect.
    - Caveat: outputs must be normalized to 32x32 transparent PNGs before
      evaluation, and prompt choice must be fixed.
@@ -416,6 +435,64 @@ qualitative/comparison baseline, but do not spend on a 4096-image practical
 diffusion run unless we specifically need a large negative external-baseline
 number. The 64-image smoke already shows a large quality gap versus PixelVAR.
 
+## Pokemon Trainer Sprite LoRA External Baseline
+
+This path is the strongest practical external generator attempted so far. It
+uses the public `sWizad/pokemon-trainer-sprite-pixelart` SDXL LoRA on top of
+`stabilityai/stable-diffusion-xl-base-1.0`, then normalizes outputs to the same
+32x32 transparent PixelVAR palette protocol. It is still not a perfect
+apples-to-apples baseline because it is text-to-image and trained on Pokemon
+trainer-style sprites, not our MSD Sprites train split, but it is much more
+targeted than generic SSD-1B.
+
+Implemented files/actions:
+
+- `configs/external/pokemon_sprite_lora_prompts.txt`
+- Reused `scripts/run_practical_diffusion_baseline.py` with explicit method and
+  filename labels.
+- Modal actions in `modal_train.py`:
+  - `run-pokemon-sprite-lora-smoke`
+  - `run-pokemon-sprite-lora-batch`
+  - `normalize-pokemon-sprite-lora-baseline`
+  - `build-pokemon-sprite-lora-sample-sheet`
+
+Generation command:
+
+```bash
+modal run modal_train.py --action run-pokemon-sprite-lora-batch --num-samples 64 --diffusion-steps 25 --diffusion-height 512 --diffusion-width 512
+```
+
+Evaluation command:
+
+```bash
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir pokemon_sprite_lora=outputs/external_baselines/pokemon_sprite_lora/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 64 --batch-size 64 --kid-subsets 20 --kid-subset-size 32 --msssim-pairs 512 --output-dir outputs/external_eval/main_vs_pokemon_sprite_lora_64"
+```
+
+Pulled artifacts:
+
+- `reports/external_eval/main_vs_pokemon_sprite_lora_64/evaluation_report.md`
+- `reports/external_eval/main_vs_pokemon_sprite_lora_64/metrics.csv`
+- `reports/final/pokemon_sprite_lora_sample_sheet.png`
+
+Metric smoke result:
+
+| Method | Images | FID | KID mean | Precision | Recall | Density | Coverage | MS-SSIM | Palette consistency |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 64 | 87.8128 | 0.007124 | 0.8125 | 0.9375 | 0.6375 | 0.9219 | 0.8535 | 1.0000 |
+| Pokemon sprite LoRA | 64 | 184.3101 | 0.130036 | 0.3125 | 0.2812 | 0.0844 | 0.1094 | 0.5171 | 1.0000 |
+
+Visual finding: this is the best external diffusion-style visual baseline so
+far. Many samples are recognizable centered pixel sprites after normalization.
+It still has failure modes that matter: some outputs include side fragments,
+decorative frames, paired characters, or sprite-sheet-like leftovers. The
+metrics match that visual read: much better PRDC than the generic SSD-1B
+baseline, but still far below PixelVAR main on FID/KID and coverage.
+
+Recommendation: include this as the primary practical external generator
+baseline. Keep SD-piXL as the most research-targeted external attempt and SSD-1B
+as a generic practical baseline. Do not claim the LoRA is a direct architecture
+competitor to PixelVAR.
+
 ## Recommended Order
 
 1. Done: run the new evaluator on PixelVAR main vs HMAR using the same exported
@@ -433,7 +510,11 @@ number. The 64-image smoke already shows a large quality gap versus PixelVAR.
 9. Done: add and run the practical SSD-1B diffusion baseline smoke, then inspect
    `reports/final/practical_diffusion_sample_sheet.png`.
 10. Done: run a 64-image practical-diffusion metric smoke against PixelVAR main.
-11. Next: search/attempt the next targeted external baseline: PixDiff-PIG if
-    code is available, otherwise VQ-Diffusion pixel-art.
-12. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
+11. Done: searched PixDiff-PIG. No runnable public code/weights found, so it is
+    related work rather than a numeric baseline for now.
+12. Done: attempted the VQ-Diffusion pixel-art model card path. The model files
+    returned HTTP 401 during download checks, so it could not be evaluated.
+13. Done: added and ran the public Pokemon trainer sprite SDXL LoRA as a more
+    targeted practical external baseline, including a 64-image metric smoke.
+14. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.

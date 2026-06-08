@@ -82,7 +82,7 @@ def load_pipeline(args):
 
 def save_manifest(args, prompts: list[str], rows: list[dict[str, object]]) -> None:
     manifest = {
-        "method": "practical_diffusion",
+        "method": args.method_name,
         "model_id": args.model_id,
         "lora_id": args.lora_id or None,
         "lora_weight_name": args.lora_weight_name or None,
@@ -103,6 +103,8 @@ def save_manifest(args, prompts: list[str], rows: list[dict[str, object]]) -> No
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a practical SDXL-family text-to-image baseline")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/external_baselines/practical_diffusion/raw"))
+    parser.add_argument("--method-name", default="practical_diffusion")
+    parser.add_argument("--filename-prefix", default="")
     parser.add_argument("--prompt-file", type=Path, default=Path("configs/external/practical_diffusion_prompts.txt"))
     parser.add_argument("--prompt-index", type=int, default=0)
     parser.add_argument("--prompt", default="")
@@ -138,6 +140,7 @@ def main() -> None:
     cross_attention_kwargs = {"scale": float(args.lora_scale)} if args.lora_id else None
 
     rows = []
+    filename_prefix = args.filename_prefix or args.method_name
     for idx, prompt in enumerate(prompts):
         generator = torch.Generator(device=args.device).manual_seed(int(args.seed) + idx)
         with torch.inference_mode():
@@ -151,7 +154,7 @@ def main() -> None:
                 generator=generator,
                 cross_attention_kwargs=cross_attention_kwargs,
             ).images[0]
-        out_path = args.output_dir / f"practical_diffusion_raw_{idx:06d}.png"
+        out_path = args.output_dir / f"{filename_prefix}_raw_{idx:06d}.png"
         image.save(out_path)
         rows.append(
             {
@@ -164,7 +167,7 @@ def main() -> None:
         print(f"Wrote {out_path}", flush=True)
 
     save_manifest(args, prompts, rows)
-    print(f"Wrote {len(rows)} practical diffusion images to {args.output_dir}")
+    print(f"Wrote {len(rows)} {args.method_name} images to {args.output_dir}")
 
 
 if __name__ == "__main__":

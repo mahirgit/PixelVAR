@@ -471,6 +471,7 @@ Honest quality summary:
 | Patch-VQ | Technically works | Learned-token path works, but blocky and worse |
 | SD-piXL external | Weak | Targeted baseline ran, but metrics and visuals are poor |
 | Practical diffusion | Weak/moderate | Generic diffusion baseline, not directly competitive |
+| Pokemon sprite LoRA | Moderate | Best external diffusion-style visual baseline, still below PixelVAR metrics |
 
 Final claim:
 
@@ -494,6 +495,7 @@ Useful files for presentation:
 | Four-way model comparison | `reports/final/four_way_sample_sheet.png` |
 | SD-piXL external sheet | `reports/final/sd_pixl_sample_sheet.png` |
 | Practical diffusion sheet | `reports/final/practical_diffusion_sample_sheet.png` |
+| Pokemon sprite LoRA sheet | `reports/final/pokemon_sprite_lora_sample_sheet.png` |
 | Model decision table | `reports/final/model_decision_table.md` |
 | Known metrics comparison | `reports/final/known_metrics_comparison.md` |
 | Memorization audit summary | `reports/final/memorization_audit_summary.md` |

@@ -38,6 +38,7 @@ Examples:
     modal run modal_train.py --action run-sd-pixl-smoke --sd-pixl-steps 250
     modal run modal_train.py --action run-sd-pixl-batch --num-samples 4 --sd-pixl-steps 1000
     modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4
+    modal run modal_train.py --action run-pokemon-sprite-lora-smoke --num-samples 4
 
 Persistent Modal volumes:
 
@@ -958,34 +959,70 @@ def commands_for_action(
         "run-practical-diffusion-batch",
         "normalize-practical-diffusion-baseline",
         "build-practical-diffusion-sample-sheet",
+        "run-pokemon-sprite-lora-smoke",
+        "run-pokemon-sprite-lora-batch",
+        "normalize-pokemon-sprite-lora-baseline",
+        "build-pokemon-sprite-lora-sample-sheet",
     }:
-        raw_dir = "outputs/external_baselines/practical_diffusion/raw"
-        png32_dir = "outputs/external_baselines/practical_diffusion/png32"
-        sheet_path = "outputs/final/practical_diffusion_sample_sheet.png"
+        is_pokemon_sprite_lora = action in {
+            "run-pokemon-sprite-lora-smoke",
+            "run-pokemon-sprite-lora-batch",
+            "normalize-pokemon-sprite-lora-baseline",
+            "build-pokemon-sprite-lora-sample-sheet",
+        }
+        if is_pokemon_sprite_lora:
+            raw_dir = "outputs/external_baselines/pokemon_sprite_lora/raw"
+            png32_dir = "outputs/external_baselines/pokemon_sprite_lora/png32"
+            sheet_path = "outputs/final/pokemon_sprite_lora_sample_sheet.png"
+            prompt_file = "configs/external/pokemon_sprite_lora_prompts.txt"
+            output_prefix = "pokemon_sprite_lora"
+            sheet_label = "Pokemon sprite LoRA"
+            sheet_title = "Pokemon sprite LoRA external baseline samples"
+            default_model_id = "stabilityai/stable-diffusion-xl-base-1.0"
+            default_lora_id = "sWizad/pokemon-trainer-sprite-pixelart"
+            default_lora_weight_name = "pk_trainer_xl_v1.safetensors"
+            model_id = default_model_id if diffusion_model_id == "segmind/SSD-1B" else diffusion_model_id
+            lora_id = diffusion_lora_id or default_lora_id
+            lora_weight_name = diffusion_lora_weight_name or default_lora_weight_name
+            action_prefix = "pokemon-sprite-lora"
+        else:
+            raw_dir = "outputs/external_baselines/practical_diffusion/raw"
+            png32_dir = "outputs/external_baselines/practical_diffusion/png32"
+            sheet_path = "outputs/final/practical_diffusion_sample_sheet.png"
+            prompt_file = "configs/external/practical_diffusion_prompts.txt"
+            output_prefix = "practical_diffusion"
+            sheet_label = "Practical diffusion"
+            sheet_title = "Practical diffusion external baseline samples"
+            model_id = diffusion_model_id
+            lora_id = diffusion_lora_id
+            lora_weight_name = diffusion_lora_weight_name
+            action_prefix = "practical-diffusion"
         sample_count = int(num_samples)
         if num_samples == 16:
-            sample_count = 4 if action == "run-practical-diffusion-smoke" else 64
+            sample_count = 4 if action == f"run-{action_prefix}-smoke" else 64
 
         prompt_arg = (
             f"--prompt {_quote(diffusion_prompt)}"
             if diffusion_prompt
-            else f"--prompt-file configs/external/practical_diffusion_prompts.txt --prompt-index {int(diffusion_prompt_index)}"
+            else f"--prompt-file {prompt_file} --prompt-index {int(diffusion_prompt_index)}"
         )
         lora_arg = ""
-        if diffusion_lora_id:
-            lora_arg = f" --lora-id {_quote(diffusion_lora_id)} --lora-scale {float(diffusion_lora_scale)}"
-            if diffusion_lora_weight_name:
-                lora_arg += f" --lora-weight-name {_quote(diffusion_lora_weight_name)}"
+        if lora_id:
+            lora_arg = f" --lora-id {_quote(lora_id)} --lora-scale {float(diffusion_lora_scale)}"
+            if lora_weight_name:
+                lora_arg += f" --lora-weight-name {_quote(lora_weight_name)}"
         diffusion_note = (
-            f"{diffusion_model_id} + LoRA {diffusion_lora_id}"
-            if diffusion_lora_id
-            else f"{diffusion_model_id} without LoRA"
+            f"{model_id} + LoRA {lora_id}"
+            if lora_id
+            else f"{model_id} without LoRA"
         )
 
         generate_cmd = (
             "python scripts/run_practical_diffusion_baseline.py "
-            f"--model-id {_quote(diffusion_model_id)} "
+            f"--model-id {_quote(model_id)} "
             f"--output-dir {_quote(raw_dir)} "
+            f"--method-name {_quote(output_prefix)} "
+            f"--filename-prefix {_quote(output_prefix)} "
             f"{prompt_arg} "
             f"--num-images {sample_count} "
             f"--seed {int(diffusion_seed)} "
@@ -1003,25 +1040,25 @@ def commands_for_action(
             f"--output-dir {_quote(png32_dir)} "
             "--palette-json data/processed/sprites/palette.json "
             "--image-size 32 "
-            "--prefix practical_diffusion "
+            f"--prefix {output_prefix} "
             "--transparent-from-corners "
             "--transparent-tolerance 18.0"
         )
         sheet_cmd = (
             "python scripts/build_sample_sheet_from_folders.py "
-            f"--folder {_quote(f'Practical diffusion={png32_dir}')} "
+            f"--folder {_quote(f'{sheet_label}={png32_dir}')} "
             f"--output {_quote(sheet_path)} "
             "--samples-per-method 16 "
             "--columns 16 "
             "--scale 4 "
             "--seed 42 "
-            "--title 'Practical diffusion external baseline samples' "
+            f"--title {_quote(sheet_title)} "
             f"--note {_quote(f'{diffusion_note}; generated raw at {int(diffusion_width)}x{int(diffusion_height)}, then normalized to the PixelVAR 32x32 palette protocol.')}"
         )
 
-        if action == "normalize-practical-diffusion-baseline":
+        if action == f"normalize-{action_prefix}-baseline":
             return ("cpu", [normalize_cmd])
-        if action == "build-practical-diffusion-sample-sheet":
+        if action == f"build-{action_prefix}-sample-sheet":
             return ("cpu", [sheet_cmd])
         return ("sd_pixl_gpu", [generate_cmd, normalize_cmd, sheet_cmd])
 
@@ -1085,6 +1122,8 @@ def commands_for_action(
         "normalize-sd-pixl-baseline, build-sd-pixl-sample-sheet, "
         "run-practical-diffusion-smoke, run-practical-diffusion-batch, "
         "normalize-practical-diffusion-baseline, build-practical-diffusion-sample-sheet, "
+        "run-pokemon-sprite-lora-smoke, run-pokemon-sprite-lora-batch, "
+        "normalize-pokemon-sprite-lora-baseline, build-pokemon-sprite-lora-sample-sheet, "
         "generate-sprites-selected, cmd-cpu, cmd-gpu."
     )
 

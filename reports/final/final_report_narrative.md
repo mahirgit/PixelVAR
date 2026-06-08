@@ -38,12 +38,11 @@ ablations:
 | Generated-keep VAR | Evaluated against generated-keep validation | Useful self-reference, not a direct winner comparison |
 | Patch-VQ VAR | Separate decoded RGBA evaluator | Useful learned-token ablation, not a direct winner comparison |
 
-We ran internal baselines and two external baseline attempts. The internal
+We ran internal baselines and three external baseline attempts. The internal
 baselines include HMAR, flat raster AR, and flat MaskGIT. The external baselines
-include SD-piXL and practical diffusion / SSD-1B, both normalized to the same
-32x32 PNG protocol before evaluation. MDIGAN, PixDiff-PIG, a stronger matched
-SDXL pixel-art LoRA setup, a user study, and 64x64 generation remain future
-work.
+include SD-piXL, practical diffusion / SSD-1B, and a Pokemon trainer sprite SDXL
+LoRA, all normalized to the same 32x32 PNG protocol before evaluation. MDIGAN,
+PixDiff-PIG, a user study, and 64x64 generation remain future work.
 
 ## Metrics Used
 
@@ -168,7 +167,12 @@ PRDC scores are far worse than PixelVAR and its sample sheet is visibly noisy.
 Practical diffusion / SSD-1B was run as a 64-image metric smoke in
 `reports/external_eval/main_vs_practical_diffusion_64`; it sometimes produces
 recognizable sprites, but it is still much worse than PixelVAR and should be
-treated as a secondary generic diffusion baseline.
+treated as a secondary generic diffusion baseline. A more targeted Pokemon
+trainer sprite SDXL LoRA was also run as a 64-image metric smoke in
+`reports/external_eval/main_vs_pokemon_sprite_lora_64`. It is visually the best
+external diffusion-style baseline so far, but it still trails PixelVAR strongly
+on FID/KID and PRDC and has visible side-fragment, frame, and paired-character
+failures.
 
 The same memorization audit was also run for PixelVAR main and HMAR step=1.
 PixelVAR exact-matched `13 / 4096` validation and `11 / 4096` test samples.

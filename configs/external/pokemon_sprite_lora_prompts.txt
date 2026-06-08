@@ -1,0 +1,15 @@
+# Fixed prompts for the sprite-specific SDXL LoRA external baseline.
+# The LoRA is trained for Pokemon-trainer-style sprite art; these prompts are
+# generic game-character prompts and are not copied from validation/test images.
+gen2 single full-body pixel art fantasy trainer hero sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art armored knight trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art wizard trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art rogue trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art archer trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art healer trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art merchant trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art scientist trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art explorer trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art ranger trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art samurai trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
+gen2 single full-body pixel art ninja trainer sprite, one isolated character, centered, front-facing, plain white background, crisp edges, limited color palette
