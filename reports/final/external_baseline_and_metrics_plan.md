@@ -329,6 +329,48 @@ need numeric external metrics, generate a larger practical-diffusion batch first
 and evaluate it through `scripts/evaluate_image_folders.py`. Do not over-claim
 from the 4-image smoke sheet.
 
+## Practical Diffusion 64-Image Metric Smoke
+
+Status on 2026-06-08: completed.
+
+Generation command:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-batch --num-samples 64 --diffusion-steps 25
+```
+
+Evaluation command:
+
+```bash
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir practical_diffusion=outputs/external_baselines/practical_diffusion/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 64 --batch-size 64 --kid-subsets 20 --kid-subset-size 32 --msssim-pairs 512 --output-dir outputs/external_eval/main_vs_practical_diffusion_64"
+```
+
+Pulled artifacts:
+
+- `reports/external_eval/main_vs_practical_diffusion_64/evaluation_report.md`
+- `reports/external_eval/main_vs_practical_diffusion_64/metrics.csv`
+- `reports/final/practical_diffusion_sample_sheet.png`
+
+Metric smoke result:
+
+| Method | Images | FID | KID mean | Precision | Recall | Density | Coverage | MS-SSIM | Palette consistency |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 64 | 87.8128 | 0.007124 | 0.8125 | 0.9375 | 0.6375 | 0.9219 | 0.8535 | 1.0000 |
+| Practical diffusion | 64 | 196.9628 | 0.092097 | 0.0312 | 0.6719 | 0.0094 | 0.0469 | 0.3935 | 1.0000 |
+
+Interpretation: this is not competitive with PixelVAR main under the same
+64-image evaluation slice. Practical diffusion has recognizable individual
+sprites in some cases, but the 64-sample sheet still contains duplicated
+characters, lineup/sprite-sheet outputs, and malformed centered crops. The
+palette consistency score is expected to be 1.0 because the outputs are
+normalized through the PixelVAR palette protocol; it should not be read as
+evidence that the diffusion model itself learned the project palette.
+
+Recommendation after the metric smoke: keep practical diffusion as an external
+qualitative/comparison baseline, but do not spend on a 4096-image practical
+diffusion run unless we specifically need a large negative external-baseline
+number. The 64-image smoke already shows a large quality gap versus PixelVAR.
+
 ## Recommended Order
 
 1. Done: run the new evaluator on PixelVAR main vs HMAR using the same exported
@@ -344,7 +386,8 @@ from the 4-image smoke sheet.
    `reports/final/sd_pixl_sample_sheet.png`.
 8. Done: add and run the practical SSD-1B diffusion baseline smoke, then inspect
    `reports/final/practical_diffusion_sample_sheet.png`.
-9. Next: decide whether to generate a larger practical-diffusion batch for
-   numeric metrics. Keep SD-piXL qualitative unless we tune it further.
-10. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
+9. Done: run a 64-image practical-diffusion metric smoke against PixelVAR main.
+10. Next: keep SD-piXL qualitative and practical diffusion as a weak external
+    metric/visual baseline unless we decide to spend on a larger negative result.
+11. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.
