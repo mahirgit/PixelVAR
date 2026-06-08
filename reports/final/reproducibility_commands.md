@@ -270,6 +270,61 @@ python scripts/evaluate_image_folders.py \
   --output-dir reports/external_eval/main_vs_sd_pixl
 ```
 
+## Practical Diffusion External Baseline
+
+Run the default SSD-1B practical diffusion smoke. This generates raw 512x512
+text-to-image samples, normalizes them to the PixelVAR 32x32 palette protocol,
+and builds a sample sheet:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4 --diffusion-steps 25
+```
+
+Download the sample sheet:
+
+```bash
+mkdir -p reports/final
+modal volume get pixelvar-outputs /final/practical_diffusion_sample_sheet.png reports/final/practical_diffusion_sample_sheet.png --force
+```
+
+On Windows PowerShell, force UTF-8 before Modal downloads if the console hits a
+checkmark encoding error:
+
+```powershell
+$env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8='1'; modal volume get pixelvar-outputs /final/practical_diffusion_sample_sheet.png reports/final/practical_diffusion_sample_sheet.png --force
+```
+
+Optional LoRA smoke. This was tested, but it is not the default because the
+Pixel Art XL LoRA loaded only partially against SSD-1B and did not clearly
+improve the 4-image visual result:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4 --diffusion-steps 25 \
+  --diffusion-lora-id nerijs/pixel-art-xl \
+  --diffusion-lora-weight-name pixel-art-xl.safetensors \
+  --diffusion-lora-scale 0.8
+```
+
+If we want numeric metrics for this external baseline, generate a larger batch
+first:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-batch --num-samples 64 --diffusion-steps 25
+```
+
+Then evaluate through the same external-folder protocol:
+
+```bash
+python scripts/evaluate_image_folders.py \
+  --reference-dir outputs/eval_images/pixelvar_main/reference \
+  --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main \
+  --generated-dir practical_diffusion=outputs/external_baselines/practical_diffusion/png32 \
+  --palette-json data/processed/sprites/palette.json \
+  --feature-space inception \
+  --max-images 64 \
+  --output-dir reports/external_eval/main_vs_practical_diffusion
+```
+
 Train the flat baselines and run the four-way known-metrics comparison:
 
 ```bash

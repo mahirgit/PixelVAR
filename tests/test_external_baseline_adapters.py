@@ -5,6 +5,7 @@ from PIL import Image
 
 from scripts.export_palette_hex import load_colors, write_hex
 from scripts.normalize_external_images import load_palette, normalize_image
+from scripts.run_practical_diffusion_baseline import prompts_for_samples, read_prompts
 
 
 def test_export_palette_hex_roundtrip(tmp_path):
@@ -68,3 +69,38 @@ def test_normalize_external_image_can_remove_corner_background(tmp_path):
     assert image[0, 0, 3] == 0
     assert image[16, 16, 3] == 255
     assert np.all(image[16, 16, :3] == np.array([0, 0, 0], dtype=np.uint8))
+
+
+def test_practical_diffusion_prompt_file_ignores_comments(tmp_path):
+    prompt_file = tmp_path / "prompts.txt"
+    prompt_file.write_text(
+        "\n# comment\npixel art knight\n\npixel art mage\n",
+        encoding="utf-8",
+    )
+
+    assert read_prompts(prompt_file) == ["pixel art knight", "pixel art mage"]
+
+
+def test_practical_diffusion_prompts_cycle_from_index(tmp_path):
+    prompt_file = tmp_path / "prompts.txt"
+    prompt_file.write_text("a\nb\nc\n", encoding="utf-8")
+
+    prompts = prompts_for_samples(
+        prompt="",
+        prompt_file=prompt_file,
+        prompt_index=2,
+        num_images=4,
+    )
+
+    assert prompts == ["c", "a", "b", "c"]
+
+
+def test_practical_diffusion_explicit_prompt_repeats():
+    prompts = prompts_for_samples(
+        prompt="single prompt",
+        prompt_file=None,
+        prompt_index=99,
+        num_images=3,
+    )
+
+    assert prompts == ["single prompt", "single prompt", "single prompt"]

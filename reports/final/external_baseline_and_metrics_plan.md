@@ -271,6 +271,64 @@ SD-piXL samples to make FID/KID/PRDC at least minimally meaningful; for this
 optimization-based method, that may be too expensive and it may remain a
 qualitative related-work baseline.
 
+## Practical Diffusion External Baseline
+
+This path adds a practical user-facing external baseline: an SDXL-family
+text-to-image model produces raw 512x512 images, then the existing PixelVAR
+external-image protocol normalizes them to 32x32 RGBA PNGs with the project
+palette. The default smoke uses `segmind/SSD-1B` because it is public,
+diffusers-compatible, smaller than full SDXL, and practical for Modal B200
+smoke runs.
+
+New adapter pieces:
+
+- `configs/external/practical_diffusion_prompts.txt`
+- `scripts/run_practical_diffusion_baseline.py`
+- Modal actions in `modal_train.py`:
+  - `run-practical-diffusion-smoke`
+  - `run-practical-diffusion-batch`
+  - `normalize-practical-diffusion-baseline`
+  - `build-practical-diffusion-sample-sheet`
+
+Default smoke command:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4 --diffusion-steps 25
+```
+
+Pulled artifact:
+
+- `reports/final/practical_diffusion_sample_sheet.png`
+
+Visual finding: this baseline is much more useful than the SD-piXL smoke. It
+generates recognizable pixel-art-like character sprites after palette
+normalization. It is still only moderate as a direct research baseline: two of
+the four smoke samples show duplicate/lineup artifacts instead of a single
+centered sprite. That is a known failure mode for text-to-image pixel-art
+prompts, even with negative prompts against sprite sheets and multiple
+characters.
+
+LoRA check: `nerijs/pixel-art-xl` with
+`pixel-art-xl.safetensors` was also smoke-tested against `segmind/SSD-1B`:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4 --diffusion-steps 25 \
+  --diffusion-lora-id nerijs/pixel-art-xl \
+  --diffusion-lora-weight-name pixel-art-xl.safetensors \
+  --diffusion-lora-scale 0.8
+```
+
+The run completed, but diffusers reported many unexpected adapter keys. This
+suggests the LoRA does not map cleanly onto SSD-1B's distilled UNet. The visual
+result was not clearly better than the no-LoRA run, so the default remains
+`segmind/SSD-1B` without LoRA. A future LoRA baseline should use a matching
+full SDXL base if the model license/access path is available.
+
+Recommendation: keep this as the practical external visual baseline now. If we
+need numeric external metrics, generate a larger practical-diffusion batch first
+and evaluate it through `scripts/evaluate_image_folders.py`. Do not over-claim
+from the 4-image smoke sheet.
+
 ## Recommended Order
 
 1. Done: run the new evaluator on PixelVAR main vs HMAR using the same exported
@@ -284,9 +342,9 @@ qualitative related-work baseline.
 6. Done: add SD-piXL as the first external released-code baseline path.
 7. Done: run the SD-piXL smoke action on Modal and inspect
    `reports/final/sd_pixl_sample_sheet.png`.
-8. Next: decide whether to tune SD-piXL or keep it qualitative. The first smoke
-   output is not good enough to justify a metric batch as-is.
-9. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
+8. Done: add and run the practical SSD-1B diffusion baseline smoke, then inspect
+   `reports/final/practical_diffusion_sample_sheet.png`.
+9. Next: decide whether to generate a larger practical-diffusion batch for
+   numeric metrics. Keep SD-piXL qualitative unless we tune it further.
+10. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.
-10. Add one practical SDXL/LoRA+quantization baseline for user-facing
-    comparison.

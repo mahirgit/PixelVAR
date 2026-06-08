@@ -1,0 +1,15 @@
+# Fixed prompts for the practical SDXL-family external baseline.
+# These prompts are intentionally generic sprite prompts, not copied from
+# validation or test images.
+single full-body pixel art fantasy hero character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art armored knight character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art wizard mage character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art rogue thief character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art archer ranger character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art healer cleric character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art orc enemy character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single centered pixel art slime monster sprite, one isolated enemy, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art robot character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art tiny dragon monster sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art skeleton enemy character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette
+single full-body pixel art merchant villager character sprite, one isolated character, centered, front-facing, plain light background, game asset, crisp edges, limited color palette

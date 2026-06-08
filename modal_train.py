@@ -37,6 +37,7 @@ Examples:
     modal run modal_train.py --action prepare-sd-pixl-baseline
     modal run modal_train.py --action run-sd-pixl-smoke --sd-pixl-steps 250
     modal run modal_train.py --action run-sd-pixl-batch --num-samples 4 --sd-pixl-steps 1000
+    modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4
 
 Persistent Modal volumes:
 
@@ -253,7 +254,7 @@ def run_b200(commands: list[str]) -> None:
 
 @app.function(image=sd_pixl_image, gpu=GPU_TYPE, volumes=VOLUMES, timeout=DEFAULT_TIMEOUT)
 def run_sd_pixl_b200(commands: list[str]) -> None:
-    """Run SD-piXL external-baseline commands on one Modal B200."""
+    """Run diffusion external-baseline commands on one Modal B200."""
     _run_commands(commands)
 
 
@@ -275,6 +276,19 @@ def commands_for_action(
     sd_pixl_model_id: str,
     sd_pixl_prompt_index: int,
     sd_pixl_prompt: str,
+    diffusion_model_id: str,
+    diffusion_lora_id: str,
+    diffusion_lora_weight_name: str,
+    diffusion_lora_scale: float,
+    diffusion_prompt_index: int,
+    diffusion_prompt: str,
+    diffusion_steps: int,
+    diffusion_guidance_scale: float,
+    diffusion_height: int,
+    diffusion_width: int,
+    diffusion_seed: int,
+    diffusion_dtype: str,
+    diffusion_negative_prompt: str,
 ) -> tuple[str, list[str]]:
     if action == "cuda-check":
         return (
@@ -929,6 +943,78 @@ def commands_for_action(
 
         return ("sd_pixl_gpu", [prepare_cmd, sd_pixl_run_cmd("pixelvar_sd_pixl.yaml"), normalize_cmd, sheet_cmd])
 
+    if action in {
+        "run-practical-diffusion-smoke",
+        "run-practical-diffusion-batch",
+        "normalize-practical-diffusion-baseline",
+        "build-practical-diffusion-sample-sheet",
+    }:
+        raw_dir = "outputs/external_baselines/practical_diffusion/raw"
+        png32_dir = "outputs/external_baselines/practical_diffusion/png32"
+        sheet_path = "outputs/final/practical_diffusion_sample_sheet.png"
+        sample_count = int(num_samples)
+        if num_samples == 16:
+            sample_count = 4 if action == "run-practical-diffusion-smoke" else 64
+
+        prompt_arg = (
+            f"--prompt {_quote(diffusion_prompt)}"
+            if diffusion_prompt
+            else f"--prompt-file configs/external/practical_diffusion_prompts.txt --prompt-index {int(diffusion_prompt_index)}"
+        )
+        lora_arg = ""
+        if diffusion_lora_id:
+            lora_arg = f" --lora-id {_quote(diffusion_lora_id)} --lora-scale {float(diffusion_lora_scale)}"
+            if diffusion_lora_weight_name:
+                lora_arg += f" --lora-weight-name {_quote(diffusion_lora_weight_name)}"
+        diffusion_note = (
+            f"{diffusion_model_id} + LoRA {diffusion_lora_id}"
+            if diffusion_lora_id
+            else f"{diffusion_model_id} without LoRA"
+        )
+
+        generate_cmd = (
+            "python scripts/run_practical_diffusion_baseline.py "
+            f"--model-id {_quote(diffusion_model_id)} "
+            f"--output-dir {_quote(raw_dir)} "
+            f"{prompt_arg} "
+            f"--num-images {sample_count} "
+            f"--seed {int(diffusion_seed)} "
+            f"--height {int(diffusion_height)} "
+            f"--width {int(diffusion_width)} "
+            f"--steps {int(diffusion_steps)} "
+            f"--guidance-scale {float(diffusion_guidance_scale)} "
+            f"--dtype {_quote(diffusion_dtype)} "
+            f"--negative-prompt {_quote(diffusion_negative_prompt)}"
+            f"{lora_arg}"
+        )
+        normalize_cmd = (
+            "python scripts/normalize_external_images.py "
+            f"--input-dir {_quote(raw_dir)} "
+            f"--output-dir {_quote(png32_dir)} "
+            "--palette-json data/processed/sprites/palette.json "
+            "--image-size 32 "
+            "--prefix practical_diffusion "
+            "--transparent-from-corners "
+            "--transparent-tolerance 18.0"
+        )
+        sheet_cmd = (
+            "python scripts/build_sample_sheet_from_folders.py "
+            f"--folder {_quote(f'Practical diffusion={png32_dir}')} "
+            f"--output {_quote(sheet_path)} "
+            "--samples-per-method 16 "
+            "--columns 16 "
+            "--scale 4 "
+            "--seed 42 "
+            "--title 'Practical diffusion external baseline samples' "
+            f"--note {_quote(f'{diffusion_note}; generated raw at {int(diffusion_width)}x{int(diffusion_height)}, then normalized to the PixelVAR 32x32 palette protocol.')}"
+        )
+
+        if action == "normalize-practical-diffusion-baseline":
+            return ("cpu", [normalize_cmd])
+        if action == "build-practical-diffusion-sample-sheet":
+            return ("cpu", [sheet_cmd])
+        return ("sd_pixl_gpu", [generate_cmd, normalize_cmd, sheet_cmd])
+
     if action == "generate-sprites-selected":
         gen_config = config if config != "configs/train/overfit32.yaml" else "configs/train/sprites_v0_full.yaml"
         gen_checkpoint = checkpoint or "checkpoints/var_sprites_v0_full/best.ckpt"
@@ -987,6 +1073,8 @@ def commands_for_action(
         "audit-main-hmar-memorization, "
         "build-four-way-sample-sheet, prepare-sd-pixl-baseline, run-sd-pixl-smoke, run-sd-pixl-batch, "
         "normalize-sd-pixl-baseline, build-sd-pixl-sample-sheet, "
+        "run-practical-diffusion-smoke, run-practical-diffusion-batch, "
+        "normalize-practical-diffusion-baseline, build-practical-diffusion-sample-sheet, "
         "generate-sprites-selected, cmd-cpu, cmd-gpu."
     )
 
@@ -1010,6 +1098,23 @@ def main(
     sd_pixl_model_id: str = "ssd1b",
     sd_pixl_prompt_index: int = 0,
     sd_pixl_prompt: str = "",
+    diffusion_model_id: str = "segmind/SSD-1B",
+    diffusion_lora_id: str = "",
+    diffusion_lora_weight_name: str = "",
+    diffusion_lora_scale: float = 0.8,
+    diffusion_prompt_index: int = 0,
+    diffusion_prompt: str = "",
+    diffusion_steps: int = 25,
+    diffusion_guidance_scale: float = 7.0,
+    diffusion_height: int = 512,
+    diffusion_width: int = 512,
+    diffusion_seed: int = 0,
+    diffusion_dtype: str = "float16",
+    diffusion_negative_prompt: str = (
+        "realistic photo, 3d render, blurry, smooth shading, detailed background, "
+        "text, watermark, logo, cropped, multiple characters, multiple sprites, "
+        "sprite sheet, character sheet, grid, lineup, duplicate, variations, portrait close-up"
+    ),
 ) -> None:
     runner, commands = commands_for_action(
         action=action,
@@ -1029,6 +1134,19 @@ def main(
         sd_pixl_model_id=sd_pixl_model_id,
         sd_pixl_prompt_index=sd_pixl_prompt_index,
         sd_pixl_prompt=sd_pixl_prompt,
+        diffusion_model_id=diffusion_model_id,
+        diffusion_lora_id=diffusion_lora_id,
+        diffusion_lora_weight_name=diffusion_lora_weight_name,
+        diffusion_lora_scale=diffusion_lora_scale,
+        diffusion_prompt_index=diffusion_prompt_index,
+        diffusion_prompt=diffusion_prompt,
+        diffusion_steps=diffusion_steps,
+        diffusion_guidance_scale=diffusion_guidance_scale,
+        diffusion_height=diffusion_height,
+        diffusion_width=diffusion_width,
+        diffusion_seed=diffusion_seed,
+        diffusion_dtype=diffusion_dtype,
+        diffusion_negative_prompt=diffusion_negative_prompt,
     )
     print(f"[modal] action={action} runner={runner}")
     if runner == "gpu":
