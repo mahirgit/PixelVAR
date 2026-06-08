@@ -25,6 +25,7 @@ The final branch comparison and sample sheets are in:
 - `reports/final/final_main_var_sample_sheet.png`
 - `reports/final/external_baseline_and_metrics_plan.md`
 - `reports/final/mdigan_decision.md`
+- `reports/final/proposal_leftovers_stretch_plan.md`
 
 ## What Was Compared
 
@@ -47,8 +48,10 @@ LoRA, all normalized to the same 32x32 PNG protocol before evaluation. SSD-1B
 practical diffusion and Pokemon sprite LoRA were both scaled to 256-image runs
 and remain below PixelVAR under the shared evaluator. MDIGAN was reviewed and
 classified as related work rather than a direct numeric baseline because its
-protocol is conditional paired-pose imputation. PixDiff-PIG, a user study, and
-64x64 generation remain future work.
+protocol is conditional paired-pose imputation. The 8-color, 32-color, and
+4-scale proposal-leftover ablations are now runnable via Modal, but their GPU
+metrics are still pending. PixDiff-PIG, a user study, and 64x64 generation
+remain future work.
 
 ## Metrics Used
 

@@ -213,13 +213,17 @@ def preprocess_dataset(
     alpha_threshold: int = 128,
     split_seed: int = 42,
     reference_palette: Path | None = None,
+    output_dataset_name: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray, PaletteExtractor]:
     """Full preprocessing pipeline for a single dataset."""
-    out_dir = PROCESSED_DIR / dataset_name
+    output_name = output_dataset_name or dataset_name
+    out_dir = PROCESSED_DIR / output_name
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"\n{'=' * 50}")
     print(f"Processing: {dataset_name} ({len(records)} images)")
+    if output_name != dataset_name:
+        print(f"  Output dataset: {output_name}")
     print(f"  Target size: {target_size}x{target_size}")
     print(f"  Palette size: {palette_size}")
     print(f"  Alpha threshold: {alpha_threshold}")
@@ -290,13 +294,15 @@ def preprocess_dataset(
     np.save(out_dir / "originals_rgba.npy", originals_rgba_arr)
 
     manifest = build_manifest(
-        dataset_name=dataset_name,
+        dataset_name=output_name,
         records=resized_records,
         target_size=target_size,
         palette_size=palette_size,
         alpha_threshold=alpha_threshold,
         split_map=split_map,
     )
+    if output_name != dataset_name:
+        manifest["source_dataset"] = dataset_name
     if reference_palette is not None:
         manifest["palette_source"] = str(reference_palette)
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
@@ -379,6 +385,14 @@ def main() -> None:
     parser.add_argument("--alpha-threshold", type=int, default=128)
     parser.add_argument("--split-seed", type=int, default=42)
     parser.add_argument(
+        "--output-dataset-name",
+        default=None,
+        help=(
+            "Optional processed dataset folder name. Useful for ablations such "
+            "as preprocessing --dataset sprites into data/processed/sprites_palette8."
+        ),
+    )
+    parser.add_argument(
         "--reference-palette",
         type=Path,
         default=None,
@@ -402,6 +416,9 @@ def main() -> None:
     if not datasets:
         print("\nNo datasets found. Run 'python scripts/download_data.py --dataset pokemon' first.")
         sys.exit(1)
+    if args.output_dataset_name is not None and len(datasets) != 1:
+        print("--output-dataset-name can only be used when exactly one source dataset is selected.")
+        sys.exit(1)
 
     for name, records in datasets.items():
         preprocess_dataset(
@@ -412,6 +429,7 @@ def main() -> None:
             alpha_threshold=args.alpha_threshold,
             split_seed=args.split_seed,
             reference_palette=args.reference_palette,
+            output_dataset_name=args.output_dataset_name,
         )
 
     print("\n=== All preprocessing complete ===")

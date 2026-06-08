@@ -29,6 +29,29 @@ def test_var_transformer_shapes_and_sampling_range():
     assert int(samples.max()) <= 16
 
 
+def test_var_transformer_supports_four_scale_ablation_schedule():
+    model = VARTransformer(
+        vocab_size=17,
+        scale_resolutions=[1, 4, 16, 32],
+        d_model=32,
+        n_layers=1,
+        n_heads=4,
+        mlp_dim=64,
+        dropout=0.0,
+    )
+    tokens = torch.randint(0, 17, (2, 1297))
+    logits = model(tokens)
+
+    assert logits.shape == (2, 1297, 17)
+    scale_logits = model.forward_by_scale(tokens)
+    assert [x.shape[1] for x in scale_logits] == [1, 16, 256, 1024]
+
+    samples = model.sample(batch_size=2, top_k=8)
+    assert samples.shape == (2, 1297)
+    assert int(samples.min()) >= 0
+    assert int(samples.max()) <= 16
+
+
 def test_hmar_transformer_shapes_masking_and_sampling_range():
     model = HMARTransformer(
         vocab_size=17,

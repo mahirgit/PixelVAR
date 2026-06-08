@@ -519,7 +519,9 @@ rağmen memorization audit onu temiz winner olmaktan çıkarıyor. Bu yüzden
 PixelVAR ve HMAR şu ana kadar daha güvenilir non-memorizing adaylar olarak
 duruyor.
 
-Eksikler açık: bazı ablationlar, user study ve 64x64. MDIGAN incelendi ve
+Eksikler açık: user study ve 64x64. Küçük proposal-leftover ablationlar artık
+runnable durumda: 8-color palette, 32-color palette ve 4-scale hierarchy. Bunlar
+metrik tablolarına girmeden önce GPU run gerektiriyor. MDIGAN incelendi ve
 conditional paired-pose imputation task olduğu için ana numeric baseline değil,
 related work olarak bırakıldı. External diffusion-style baselinelar artık
 çalıştırıldı; sonuçlar PixelVAR lehine ama caveat'lerle sunulmalı.

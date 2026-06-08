@@ -54,8 +54,8 @@ Proposal'daki ana iddialar ve bizim şu anki durumumuz:
 | Palette Consistency Score | DONE | Evaluator içinde var ve ana modellerde `1.0000`. |
 | Edge crispness / edge density | DONE | Pixel-art-specific proxy olarak edge density raporlanıyor. |
 | Multi-scale VQ-VAE tokenizer | PARTIAL / NOT DONE | Neural VQ-VAE implement edildi ama kalite yetersiz olduğu için ana yol olmadı. Patch-VQ alternatifi denendi. Proposal'daki tam çok ölçekli VQ-VAE hedefi tamamlanmadı. |
-| Codebook size 8/16/32 ablation | NOT DONE | Sistematik 8/16/32 ablation yapılmadı. Ana sonuç 16 renk. |
-| Number-of-scales ablation | NOT DONE | Sistematik ölçek sayısı ablation'ı yapılmadı. |
+| Codebook size 8/16/32 ablation | SETUP DONE / METRICS PENDING | 8 ve 32 renk için ayrı processed dataset, train config ve Modal action eklendi; GPU run sonuçları bekleniyor. |
+| Number-of-scales ablation | SETUP DONE / METRICS PENDING | 4-scale `[1, 4, 16, 32]` VAR config ve Modal action eklendi; GPU run sonuçları bekleniyor. |
 | PixDiff-PIG baseline | NOT DONE | Çalıştırılmadı. |
 | SD 1.5 / LoRA + quantization baseline | PARTIAL DONE | Exact SD 1.5 LoRA yapılmadı; bunun yerine SSD-1B practical diffusion 256 ve Pokemon sprite SDXL LoRA 256 çalıştırıldı. |
 | SD-piXL external baseline | PARTIAL DONE | Repo-side setup, Modal action, smoke ve 16-image metric batch tamamlandı; sonuç zayıf olduğu için büyütülmedi. |
@@ -660,25 +660,39 @@ Ancak learned-token yönü Patch-VQ ile ablation olarak denendi.
 
 ### 14.2 32-Color Codebook ve 8/16/32 Ablation
 
-Tamamlanmadı.
+Setup tamamlandı, metrik run bekleniyor.
 
-Neden:
+Durum:
 
 - Ana model 16 renkli palette ile stabil ve iyi çalıştı.
-- Zaman, GPU bütçesi ve diğer proposal maddelerini tamamlama önceliği nedeniyle
-  sistematik 8/16/32 ablation yapılmadı.
-- 32 renk output diversity'i artırabilir ama evaluation ve tokenizer behavior
-  tekrar çalıştırılmalı.
+- 8 renk ve 32 renk için ayrı processed dataset yolu eklendi:
+  `sprites_palette8`, `sprites_palette32`.
+- Her biri için overfit32, debug1k ve v0_full train config eklendi.
+- Modal action'ları eklendi:
+  `prepare-sprites-palette8`, `train-sprites-palette8-ladder`,
+  `eval-sprites-palette8`, `prepare-sprites-palette32`,
+  `train-sprites-palette32-ladder`, `eval-sprites-palette32`.
+
+Henüz yapılmayan:
+
+- GPU training/evaluation run'ları henüz çalıştırılmadı.
+- Bu yüzden final numeric tabloda 8/32 palette sonucu yok.
 
 ### 14.3 Number-of-Scales Ablation
 
-Tamamlanmadı.
+Setup tamamlandı, metrik run bekleniyor.
 
-Neden:
+Durum:
 
 - Ana 6-scale design proposal ile uyumlu ve çalışır hale geldi.
-- Farklı scale sayıları yeni config, training ve evaluation maliyeti getirir.
-- Önce ana ve HMAR branch'leri bitirmek daha kritik görüldü.
+- 4-scale `[1, 4, 16, 32]` ablation config'leri eklendi.
+- Modal action'ları eklendi:
+  `train-sprites-scale4-ladder`, `eval-sprites-scale4`.
+
+Henüz yapılmayan:
+
+- GPU training/evaluation run'ları henüz çalıştırılmadı.
+- Bu yüzden final numeric tabloda scale-count ablation sonucu yok.
 
 ### 14.4 External Baselines
 
@@ -787,6 +801,7 @@ Bu karar proposal'dan sapma ama sonuç kalitesi açısından pragmatik ve savunu
 - `reports/final/memorization_audit_summary.md`
 - `reports/final/external_baseline_and_metrics_plan.md`
 - `reports/final/mdigan_decision.md`
+- `reports/final/proposal_leftovers_stretch_plan.md`
 - `reports/final/reproducibility_commands.md`
 - `reports/option_a_progress_report.md`
 
@@ -815,14 +830,18 @@ Bu karar proposal'dan sapma ama sonuç kalitesi açısından pragmatik ve savunu
 
 Sıralı öneri:
 
-1. User study için küçük ama düzgün bir form/protocol hazırla.
+1. Yeni eklenen 8-color, 32-color ve 4-scale stretch ablation run'larını Modal
+   üzerinde çalıştır ve metrikleri indir.
 
-2. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney ekle.
+2. Sonuçlar geldikten sonra `proposal_leftovers_stretch_plan.md` ve final
+   comparison tablolarını güncelle.
 
-3. 64x64'i ancak 32x32 sonuçları ve external baseline anlatısı tamamen
+3. User study için küçük ama düzgün bir form/protocol hazırla.
+
+4. 64x64'i ancak 32x32 sonuçları ve external baseline anlatısı tamamen
    kilitlendikten sonra ayrı next-stage deney olarak dene.
 
-4. Final presentation deck'i latest comparison tablolarıyla polish et.
+5. Final presentation deck'i latest comparison tablolarıyla polish et.
 
 ## 18. Final Değerlendirme
 
@@ -842,8 +861,8 @@ Eksikler de net:
 - Proposal'daki exact VQ-VAE tokenizer tamamlanmadı.
 - External diffusion baselines tamamlandı ama protocol caveat'leriyle raporlanmalı.
 - User study yok.
-- 8/16/32 codebook ablation yok.
-- Scale-count ablation yok.
+- 8/16/32 codebook ablation için runnable setup var ama GPU sonuçları yok.
+- Scale-count ablation için runnable setup var ama GPU sonuçları yok.
 - 64x64 yok.
 
 Bu yüzden raporda en dürüst claim şu olmalı:

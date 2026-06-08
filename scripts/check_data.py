@@ -37,20 +37,23 @@ def main() -> None:
 
     palette = PaletteExtractor()
     palette.load(data_dir / "palette.json")
+    expected_palette_size = int(manifest.get("palette_size", len(palette.palette)))
+    expected_vocab_size = int(manifest.get("vocab_size", expected_palette_size + 1))
+    max_token = expected_vocab_size - 1
 
     errors = []
     if index_maps.shape != alpha_masks.shape:
         errors.append(f"index_maps shape {index_maps.shape} != alpha_masks shape {alpha_masks.shape}")
     if index_maps.ndim != 3 or index_maps.shape[1:] != (32, 32):
         errors.append(f"index_maps must have shape (N, 32, 32), got {index_maps.shape}")
-    if len(palette.palette) != 16:
-        errors.append(f"expected 16 palette colors, got {len(palette.palette)}")
-    if index_maps.min() < 0 or index_maps.max() > 16:
-        errors.append(f"token range [{index_maps.min()}, {index_maps.max()}] outside [0, 16]")
+    if len(palette.palette) != expected_palette_size:
+        errors.append(f"expected {expected_palette_size} palette colors, got {len(palette.palette)}")
+    if index_maps.min() < 0 or index_maps.max() > max_token:
+        errors.append(f"token range [{index_maps.min()}, {index_maps.max()}] outside [0, {max_token}]")
     if not np.any(index_maps == 0):
         errors.append("transparent token 0 never appears")
-    if not np.any(index_maps == 16):
-        print("[warn] token 16 does not appear in this processed set; this can happen on tiny subsets")
+    if not np.any(index_maps == max_token):
+        print(f"[warn] token {max_token} does not appear in this processed set; this can happen on tiny subsets")
     transparency = 1.0 - float(alpha_masks.mean())
     if transparency <= 0.0 or transparency >= 1.0:
         errors.append(f"unexpected transparency ratio {transparency:.4f}")

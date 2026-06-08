@@ -27,6 +27,14 @@ Examples:
     modal run modal_train.py --action train-sprites-patchvq16-v0-full
     modal run modal_train.py --action train-sprites-hmar-v0-full
     modal run modal_train.py --action eval-hmar-refinement-ablation
+    modal run modal_train.py --action prepare-sprites-palette8
+    modal run modal_train.py --action train-sprites-palette8-ladder
+    modal run modal_train.py --action eval-sprites-palette8
+    modal run modal_train.py --action prepare-sprites-palette32
+    modal run modal_train.py --action train-sprites-palette32-ladder
+    modal run modal_train.py --action eval-sprites-palette32
+    modal run modal_train.py --action train-sprites-scale4-ladder
+    modal run modal_train.py --action eval-sprites-scale4
     modal run modal_train.py --action benchmark-main-hmar-known-metrics
     modal run modal_train.py --action train-flat-ar-ladder
     modal run modal_train.py --action train-flat-maskgit-ladder
@@ -166,6 +174,15 @@ TRAIN_CONFIGS = {
     "train-sprites-overfit32": "configs/train/sprites_overfit32.yaml",
     "train-sprites-debug1k": "configs/train/sprites_debug1k.yaml",
     "train-sprites-v0-full": "configs/train/sprites_v0_full.yaml",
+    "train-sprites-palette8-overfit32": "configs/train/sprites_palette8_overfit32.yaml",
+    "train-sprites-palette8-debug1k": "configs/train/sprites_palette8_debug1k.yaml",
+    "train-sprites-palette8-v0-full": "configs/train/sprites_palette8_v0_full.yaml",
+    "train-sprites-palette32-overfit32": "configs/train/sprites_palette32_overfit32.yaml",
+    "train-sprites-palette32-debug1k": "configs/train/sprites_palette32_debug1k.yaml",
+    "train-sprites-palette32-v0-full": "configs/train/sprites_palette32_v0_full.yaml",
+    "train-sprites-scale4-overfit32": "configs/train/sprites_scale4_overfit32.yaml",
+    "train-sprites-scale4-debug1k": "configs/train/sprites_scale4_debug1k.yaml",
+    "train-sprites-scale4-v0-full": "configs/train/sprites_scale4_v0_full.yaml",
     "train-sprites-generated-keep-overfit32": "configs/train/sprites_generated_keep_overfit32.yaml",
     "train-sprites-generated-keep-debug1k": "configs/train/sprites_generated_keep_debug1k.yaml",
     "train-sprites-generated-keep-v0-full": "configs/train/sprites_generated_keep_v0_full.yaml",
@@ -332,6 +349,28 @@ def commands_for_action(
             ],
         )
 
+    if action == "prepare-sprites-palette8":
+        return (
+            "cpu",
+            [
+                "python scripts/curate_msd_sprites.py --dataset-name sprites",
+                "python scripts/preprocess_data.py "
+                "--dataset sprites --palette-size 8 --output-dataset-name sprites_palette8",
+                "python scripts/check_data.py --dataset sprites_palette8",
+            ],
+        )
+
+    if action == "prepare-sprites-palette32":
+        return (
+            "cpu",
+            [
+                "python scripts/curate_msd_sprites.py --dataset-name sprites",
+                "python scripts/preprocess_data.py "
+                "--dataset sprites --palette-size 32 --output-dataset-name sprites_palette32",
+                "python scripts/check_data.py --dataset sprites_palette32",
+            ],
+        )
+
     if action == "prepare-raw-sprites":
         transparent_arg = f" --transparent-color {_quote(transparent_color)}" if transparent_color else ""
         return (
@@ -483,6 +522,36 @@ def commands_for_action(
             ],
         )
 
+    if action == "train-sprites-palette8-ladder":
+        return (
+            "gpu",
+            [
+                "python scripts/train_var.py --config configs/train/sprites_palette8_overfit32.yaml",
+                "python scripts/train_var.py --config configs/train/sprites_palette8_debug1k.yaml",
+                "python scripts/train_var.py --config configs/train/sprites_palette8_v0_full.yaml",
+            ],
+        )
+
+    if action == "train-sprites-palette32-ladder":
+        return (
+            "gpu",
+            [
+                "python scripts/train_var.py --config configs/train/sprites_palette32_overfit32.yaml",
+                "python scripts/train_var.py --config configs/train/sprites_palette32_debug1k.yaml",
+                "python scripts/train_var.py --config configs/train/sprites_palette32_v0_full.yaml",
+            ],
+        )
+
+    if action == "train-sprites-scale4-ladder":
+        return (
+            "gpu",
+            [
+                "python scripts/train_var.py --config configs/train/sprites_scale4_overfit32.yaml",
+                "python scripts/train_var.py --config configs/train/sprites_scale4_debug1k.yaml",
+                "python scripts/train_var.py --config configs/train/sprites_scale4_v0_full.yaml",
+            ],
+        )
+
     if action == "train-flat-ar-ladder":
         return (
             "gpu",
@@ -628,6 +697,41 @@ def commands_for_action(
                 "--reference-samples 2048"
             )
         return ("gpu", commands)
+
+    if action in {"eval-sprites-palette8", "eval-sprites-palette32", "eval-sprites-scale4"}:
+        ablation_defaults = {
+            "eval-sprites-palette8": (
+                "configs/train/sprites_palette8_v0_full.yaml",
+                "checkpoints/var_sprites_palette8_v0_full/best.ckpt",
+                "outputs/eval/sprites_palette8_v0_full",
+            ),
+            "eval-sprites-palette32": (
+                "configs/train/sprites_palette32_v0_full.yaml",
+                "checkpoints/var_sprites_palette32_v0_full/best.ckpt",
+                "outputs/eval/sprites_palette32_v0_full",
+            ),
+            "eval-sprites-scale4": (
+                "configs/train/sprites_scale4_v0_full.yaml",
+                "checkpoints/var_sprites_scale4_v0_full/best.ckpt",
+                "outputs/eval/sprites_scale4_v0_full",
+            ),
+        }
+        default_config, default_checkpoint, default_output = ablation_defaults[action]
+        eval_config = config if config != "configs/train/overfit32.yaml" else default_config
+        eval_checkpoint = checkpoint or default_checkpoint
+        eval_output = output if output != "outputs/samples/modal_sample_grid.png" else default_output
+        eval_samples = 128 if num_samples == 16 else int(num_samples)
+        eval_cmd = (
+            "python scripts/evaluate_option_a.py "
+            f"--config {_quote(eval_config)} "
+            f"--checkpoint {_quote(eval_checkpoint)} "
+            f"--output-dir {_quote(eval_output)} "
+            f"--num-samples {eval_samples} "
+            "--sample-batch-size 64 "
+            "--grid-samples 64 "
+            "--reference-samples 2048"
+        )
+        return ("gpu", [eval_cmd])
 
     if action == "eval-sprites":
         eval_config = config if config != "configs/train/overfit32.yaml" else "configs/train/sprites_v0_full.yaml"
@@ -1099,10 +1203,15 @@ def commands_for_action(
     raise ValueError(
         "Unknown action. Use one of: cuda-check, prepare-pokemon, check-pokemon, "
         "download-sprites-public, prepare-sprites, prepare-raw-sprites, prepare-opengameart, "
+        "prepare-sprites-palette8, prepare-sprites-palette32, "
         "prepare-opengameart-public, prepare-sprites-generated-keep, prepare-sprites-mixed, "
         "prepare-sprites-mixed-opengameart, export-vqvae-sprites, prepare-patch-vq-sprites, smoke, "
         "train-overfit32, train-debug1k, train-v0-full, train-sprites-overfit32, "
-        "train-sprites-debug1k, train-sprites-v0-full, train-sprites-generated-keep-overfit32, "
+        "train-sprites-debug1k, train-sprites-v0-full, "
+        "train-sprites-palette8-overfit32, train-sprites-palette8-debug1k, train-sprites-palette8-v0-full, "
+        "train-sprites-palette32-overfit32, train-sprites-palette32-debug1k, train-sprites-palette32-v0-full, "
+        "train-sprites-scale4-overfit32, train-sprites-scale4-debug1k, train-sprites-scale4-v0-full, "
+        "train-sprites-generated-keep-overfit32, "
         "train-sprites-generated-keep-debug1k, train-sprites-generated-keep-v0-full, "
         "train-sprites-mixed-overfit32, train-sprites-mixed-debug1k, train-sprites-mixed-v0-full, "
         "train-sprites-mixed-oga-overfit32, train-sprites-mixed-oga-debug1k, "
@@ -1113,9 +1222,11 @@ def commands_for_action(
         "train-sprites-hmar-overfit32, train-sprites-hmar-debug1k, train-sprites-hmar-v0-full, "
         "train-sprites-flat-ar-overfit32, train-sprites-flat-ar-debug1k, train-sprites-flat-ar-v0-full, "
         "train-sprites-flat-maskgit-overfit32, train-sprites-flat-maskgit-debug1k, train-sprites-flat-maskgit-v0-full, "
-        "train, train-ladder, train-flat-ar-ladder, train-flat-maskgit-ladder, "
+        "train, train-ladder, train-sprites-palette8-ladder, train-sprites-palette32-ladder, "
+        "train-sprites-scale4-ladder, train-flat-ar-ladder, train-flat-maskgit-ladder, "
         "sample, sample-vq-var, sample-patch-vq-var, sample-hmar, "
         "eval-patch-vq-decoded, eval-hmar-sprites, eval-hmar-refinement-ablation, eval-sprites, "
+        "eval-sprites-palette8, eval-sprites-palette32, eval-sprites-scale4, "
         "benchmark-main-hmar-known-metrics, benchmark-main-hmar-flat-known-metrics, audit-flat-ar-memorization, "
         "audit-main-hmar-memorization, "
         "build-four-way-sample-sheet, prepare-sd-pixl-baseline, run-sd-pixl-smoke, run-sd-pixl-batch, "

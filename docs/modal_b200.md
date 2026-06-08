@@ -63,6 +63,37 @@ modal run modal_train.py --action train-sprites-mixed-debug1k
 modal run modal_train.py --action train-sprites-mixed-v0-full
 ```
 
+## Proposal Leftovers / Stretch Ablations
+
+These are optional proposal-cleanup runs after the main 16-color, 6-scale
+PixelVAR result is in place.
+
+8-color palette ablation:
+
+```bash
+modal run modal_train.py --action prepare-sprites-palette8
+modal run modal_train.py --action train-sprites-palette8-ladder
+modal run modal_train.py --action eval-sprites-palette8 --num-samples 128
+```
+
+32-color palette ablation:
+
+```bash
+modal run modal_train.py --action prepare-sprites-palette32
+modal run modal_train.py --action train-sprites-palette32-ladder
+modal run modal_train.py --action eval-sprites-palette32 --num-samples 128
+```
+
+4-scale hierarchy ablation:
+
+```bash
+modal run modal_train.py --action train-sprites-scale4-ladder
+modal run modal_train.py --action eval-sprites-scale4 --num-samples 128
+```
+
+The detailed interpretation plan is in
+`reports/final/proposal_leftovers_stretch_plan.md`.
+
 For a manually supplied Sprites archive/folder instead, upload it into the data
 volume and use the raw curation action:
 

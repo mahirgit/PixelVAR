@@ -48,6 +48,56 @@ modal run modal_train.py --action sample \
   --output outputs/samples/sprites_v0_full_t08_top8.png
 ```
 
+## Proposal Leftovers / Stretch Ablations
+
+These commands make the remaining lightweight proposal ablations runnable. They
+are separate from the main result and should be interpreted only after their
+metric reports and sample grids are downloaded.
+
+8-color palette ablation:
+
+```bash
+modal run modal_train.py --action prepare-sprites-palette8
+modal run modal_train.py --action train-sprites-palette8-ladder
+modal run modal_train.py --action eval-sprites-palette8 --num-samples 128
+```
+
+32-color palette ablation:
+
+```bash
+modal run modal_train.py --action prepare-sprites-palette32
+modal run modal_train.py --action train-sprites-palette32-ladder
+modal run modal_train.py --action eval-sprites-palette32 --num-samples 128
+```
+
+4-scale hierarchy ablation:
+
+```bash
+modal run modal_train.py --action train-sprites-scale4-ladder
+modal run modal_train.py --action eval-sprites-scale4 --num-samples 128
+```
+
+Download stretch results:
+
+```powershell
+New-Item -ItemType Directory -Force -Path reports\eval\sprites_palette8_v0_full | Out-Null
+modal volume get pixelvar-outputs /eval/sprites_palette8_v0_full/evaluation_report.md reports/eval/sprites_palette8_v0_full/evaluation_report.md --force
+modal volume get pixelvar-outputs /eval/sprites_palette8_v0_full/metrics.csv reports/eval/sprites_palette8_v0_full/metrics.csv --force
+modal volume get pixelvar-outputs /eval/sprites_palette8_v0_full/temp_0.8_topk_8_grid.png reports/eval/sprites_palette8_v0_full/temp_0.8_topk_8_grid.png --force
+
+New-Item -ItemType Directory -Force -Path reports\eval\sprites_palette32_v0_full | Out-Null
+modal volume get pixelvar-outputs /eval/sprites_palette32_v0_full/evaluation_report.md reports/eval/sprites_palette32_v0_full/evaluation_report.md --force
+modal volume get pixelvar-outputs /eval/sprites_palette32_v0_full/metrics.csv reports/eval/sprites_palette32_v0_full/metrics.csv --force
+modal volume get pixelvar-outputs /eval/sprites_palette32_v0_full/temp_0.8_topk_8_grid.png reports/eval/sprites_palette32_v0_full/temp_0.8_topk_8_grid.png --force
+
+New-Item -ItemType Directory -Force -Path reports\eval\sprites_scale4_v0_full | Out-Null
+modal volume get pixelvar-outputs /eval/sprites_scale4_v0_full/evaluation_report.md reports/eval/sprites_scale4_v0_full/evaluation_report.md --force
+modal volume get pixelvar-outputs /eval/sprites_scale4_v0_full/metrics.csv reports/eval/sprites_scale4_v0_full/metrics.csv --force
+modal volume get pixelvar-outputs /eval/sprites_scale4_v0_full/temp_0.8_topk_8_grid.png reports/eval/sprites_scale4_v0_full/temp_0.8_topk_8_grid.png --force
+```
+
+Detailed plan: `reports/final/proposal_leftovers_stretch_plan.md`
+
 ## HMAR Ablation
 
 Train HMAR:

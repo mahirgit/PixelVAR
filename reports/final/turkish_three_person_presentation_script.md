@@ -638,12 +638,17 @@ neden tamamlamadığımızı net açıklayabiliyoruz.
 Tamamlanmayan veya partial kalan ana maddeler:
 
 - Exact multi-scale VQ-VAE tokenizer
-- 32-color veya 8/16/32 codebook ablation
-- Number-of-scales ablation
+- 32-color veya 8/16/32 codebook ablation sonuçları
+- Number-of-scales ablation sonuçları
 - PixDiff-PIG baseline
 - Exact SD 1.5 LoRA + quantization baseline
 - User study, n >= 20
 - 64x64 veya larger dimension experiments
+
+Burada küçük bir güncelleme var: 8-color, 32-color ve 4-scale ablation setup'ları
+artık repo içinde runnable durumda. Yani config ve Modal action tarafı hazır.
+Ama GPU training/evaluation run'ları henüz çalışmadığı için bunları final sonuç
+tablosuna metrik olarak eklemiyoruz.
 
 ### VQ-VAE neden ana yol olmadı?
 
@@ -784,7 +789,8 @@ Implementation açısından en mantıklı sonraki adımlar:
    imputation task'ı bizim unconditional generation protokolümüzle doğrudan adil
    karşılaştırılamıyor.
 2. Zaman kalırsa user study için küçük ama düzgün bir form/protocol hazırlamak.
-3. Zaman kalırsa codebook veya scale ablationlardan en az bir küçük deney eklemek.
+3. Yeni eklenen 8-color, 32-color ve 4-scale ablation run'larını Modal üzerinde
+   çalıştırıp metriklerini indirmek.
 4. 64x64 için sadece küçük pilot run planlamak; full training'i ancak 32x32
    final comparison bittikten sonra yapmak.
 
@@ -797,9 +803,10 @@ Genel olarak proje proposal'ın ana fikrini çalışan bir sisteme dönüştürd
 memorization audit var ve 170K generation hedefi tamamlandı.
 
 Ama hâlâ eksikler var. En büyük eksikler proposal'daki exact VQ-VAE/tokenizer
-ablation tarafının tamamlanmaması, user study, bazı sistematik ablationlar ve
-larger dimension deneyleri. Bunları tamamlayamama nedenimiz ise temelde compute
-ve altyapı sınırlamaları, veri erişimi problemleri ve önce ana 32x32 proposal
+ablation tarafının tamamlanmaması, user study, yeni eklenen codebook/scale
+ablation setup'larının GPU sonuçlarının henüz alınmamış olması ve larger
+dimension deneyleri. Bunları tamamlayamama nedenimiz ise temelde compute ve
+altyapı sınırlamaları, veri erişimi problemleri ve önce ana 32x32 proposal
 sonucunu sağlamlaştırma önceliğiydi.
 
 Bu yüzden final iddiayı abartmadan kurmalıyız:
@@ -888,11 +895,11 @@ metriklerde en iyi görünse bile memorization audit nedeniyle temiz winner değ
 Bu yüzden sonuçları sadece tablo üzerinden değil, audit ile birlikte yorumlamak
 gerekiyor.
 
-Eksik kalan taraflar açık: bazı ablationlar, user study ve 64x64 denemeleri.
-Bunlar compute, altyapı ve zaman nedeniyle ertelendi. MDIGAN incelendi ama ana
-numeric baseline yapılmadı; çünkü aynı karakterin başka pose'larını input olarak
-isteyen conditional imputation protokolü PixelVAR'ın unconditional generation
-protokolüyle doğrudan adil karşılaştırılamıyor. External baselinelar artık aynı
-evaluator ile tabloya eklendi; bundan sonraki en mantıklı adım final sunum
-metnini bu latest tabloya göre kilitlemek ve sonra 64x64 gibi daha pahalı
-deneylere geçip geçmemeye karar vermek.
+Eksik kalan taraflar açık: user study ve 64x64 denemeleri. Küçük
+proposal-leftover ablationlar için 8-color, 32-color ve 4-scale setup'ları artık
+runnable durumda, ama GPU sonuçları henüz yok. MDIGAN incelendi ama ana numeric
+baseline yapılmadı; çünkü aynı karakterin başka pose'larını input olarak isteyen
+conditional imputation protokolü PixelVAR'ın unconditional generation protokolüyle
+doğrudan adil karşılaştırılamıyor. External baselinelar artık aynı evaluator ile
+tabloya eklendi; bundan sonraki en mantıklı adım yeni stretch ablation run'larını
+çalıştırıp sonuçları final tabloya eklemek.
