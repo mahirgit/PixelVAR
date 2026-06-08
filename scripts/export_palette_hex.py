@@ -27,7 +27,8 @@ def load_colors(path: Path) -> list[tuple[int, int, int]]:
 
 def write_hex(colors: list[tuple[int, int, int]], output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
-    lines = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in colors]
+    # SD-piXL's loader expects bare RRGGBB values, not CSS-style #RRGGBB.
+    lines = [f"{r:02X}{g:02X}{b:02X}" for r, g, b in colors]
     output.write_text("\n".join(lines) + "\n")
 
 

@@ -230,6 +230,40 @@ Expected outputs:
 - `outputs/external_baselines/sd_pixl/png32/*.png`
 - `outputs/final/sd_pixl_sample_sheet.png`
 
+## SD-piXL Smoke Result
+
+Status on 2026-06-08: smoke run completed end to end on Modal B200.
+
+Two adapter issues were fixed before completion:
+
+1. The SD-piXL Modal image originally pinned `torch==2.4.0` with CUDA 12.1,
+   which could not run kernels on B200/Blackwell. The SD-piXL image now uses
+   `torch==2.8.0`, `torchvision==0.23.0`, and `torchaudio==2.8.0` from the
+   CUDA 12.8 wheel index.
+2. The PixelVAR palette `.hex` export originally wrote CSS-style `#RRGGBB`
+   lines. SD-piXL's palette loader expects bare `RRGGBB`, so the export adapter
+   now writes bare six-character hex values.
+
+Completed smoke command:
+
+```bash
+modal run modal_train.py --action run-sd-pixl-smoke --sd-pixl-steps 250
+```
+
+Pulled artifact:
+
+- `reports/final/sd_pixl_sample_sheet.png`
+
+Visual finding: the smoke output is valid but poor. It appears as noisy
+palette-colored blocks rather than a recognizable centered 32x32 character
+sprite. Treat this as a pipeline smoke success, not as a competitive baseline
+result.
+
+Recommendation: do not spend on the larger SD-piXL batch without first tuning
+the SD-piXL setup. The current evidence suggests SD-piXL should remain a
+qualitative related external baseline path, unless we invest extra time in
+prompt/control/reference tuning.
+
 Do not treat the one-image smoke run as a metric result. Use it only to verify
 the environment, downloads, prompt path, palette conversion, and output
 normalization. Numeric metrics should only be reported if we generate enough
@@ -248,10 +282,10 @@ qualitative related-work baseline.
 5. Done: run memorization audits for PixelVAR main and HMAR step=1 with the
    same audit script.
 6. Done: add SD-piXL as the first external released-code baseline path.
-7. Next: run the SD-piXL smoke action on Modal and inspect
-   `outputs/final/sd_pixl_sample_sheet.png`.
-8. Next: decide whether SD-piXL stays qualitative or whether to spend on a small
-   prompt batch for external-folder metrics.
+7. Done: run the SD-piXL smoke action on Modal and inspect
+   `reports/final/sd_pixl_sample_sheet.png`.
+8. Next: decide whether to tune SD-piXL or keep it qualitative. The first smoke
+   output is not good enough to justify a metric batch as-is.
 9. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.
 10. Add one practical SDXL/LoRA+quantization baseline for user-facing

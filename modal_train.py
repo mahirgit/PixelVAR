@@ -123,10 +123,10 @@ sd_pixl_image = (
     modal.Image.from_registry("nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04", add_python="3.10")
     .apt_install("git", "libgl1", "libglib2.0-0", "ffmpeg")
     .pip_install(
-        "torch==2.4.0",
-        "torchvision==0.19.0",
-        "torchaudio==2.4.0",
-        index_url="https://download.pytorch.org/whl/cu121",
+        "torch==2.8.0",
+        "torchvision==0.23.0",
+        "torchaudio==2.8.0",
+        index_url="https://download.pytorch.org/whl/cu128",
     )
     .pip_install(
         "accelerate==0.33.0",

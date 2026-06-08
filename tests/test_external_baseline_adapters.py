@@ -22,7 +22,7 @@ def test_export_palette_hex_roundtrip(tmp_path):
     output = tmp_path / "palette.hex"
     write_hex(colors, output)
 
-    assert output.read_text().splitlines() == ["#010203", "#FE8000"]
+    assert output.read_text().splitlines() == ["010203", "FE8000"]
 
 
 def test_normalize_external_image_quantizes_to_palette(tmp_path):
