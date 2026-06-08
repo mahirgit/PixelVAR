@@ -21,6 +21,11 @@ The main score used so far is a lightweight Frechet distance over sprite
 features. It is useful for choosing among our branches, but it is not enough on
 its own for a serious paper-style comparison.
 
+The consolidated external-baseline table is now in
+`reports/final/external_baseline_comparison.md`. That file is the cleanest place
+to read PixelVAR vs SD-piXL vs SSD-1B practical diffusion vs Pokemon sprite LoRA
+without mixing the individual run notes.
+
 ## External Baselines to Use
 
 ### Tier 1: Most Related Pixel-Art/Sprite Baselines
@@ -493,6 +498,25 @@ baseline. Keep SD-piXL as the most research-targeted external attempt and SSD-1B
 as a generic practical baseline. Do not claim the LoRA is a direct architecture
 competitor to PixelVAR.
 
+Scaled 256-image result:
+
+```bash
+modal run modal_train.py --action run-pokemon-sprite-lora-batch --num-samples 256 --diffusion-steps 25 --diffusion-height 512 --diffusion-width 512
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir pokemon_sprite_lora=outputs/external_baselines/pokemon_sprite_lora/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 256 --batch-size 64 --kid-subsets 20 --kid-subset-size 128 --msssim-pairs 2048 --output-dir outputs/external_eval/main_vs_pokemon_sprite_lora_256"
+```
+
+| Method | Images | FID | KID mean | Precision | Recall | Density | Coverage | MS-SSIM | Palette consistency |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 256 | 46.4794 | 0.007480 | 0.9102 | 0.8711 | 0.8852 | 0.8906 | 0.8368 | 1.0000 |
+| Pokemon sprite LoRA | 256 | 154.0150 | 0.136589 | 0.1172 | 0.1211 | 0.0312 | 0.0508 | 0.5421 | 1.0000 |
+
+Interpretation after scaling: the LoRA remains the best-looking external
+diffusion-style baseline, but the larger run makes the gap clearer rather than
+smaller. FID improves versus the 64-image smoke, but precision, recall, density,
+and coverage are far below PixelVAR. The refreshed sample sheet still shows
+recognizable sprites mixed with repeated multi-character, frame, and side-piece
+failures.
+
 ## Recommended Order
 
 1. Done: run the new evaluator on PixelVAR main vs HMAR using the same exported
@@ -516,5 +540,6 @@ competitor to PixelVAR.
     returned HTTP 401 during download checks, so it could not be evaluated.
 13. Done: added and ran the public Pokemon trainer sprite SDXL LoRA as a more
     targeted practical external baseline, including a 64-image metric smoke.
-14. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
+14. Done: scaled the Pokemon sprite LoRA to a 256-image metric run.
+15. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.

@@ -498,6 +498,7 @@ Useful files for presentation:
 | Pokemon sprite LoRA sheet | `reports/final/pokemon_sprite_lora_sample_sheet.png` |
 | Model decision table | `reports/final/model_decision_table.md` |
 | Known metrics comparison | `reports/final/known_metrics_comparison.md` |
+| External baseline comparison | `reports/final/external_baseline_comparison.md` |
 | Memorization audit summary | `reports/final/memorization_audit_summary.md` |
 | Detailed Turkish report | `reports/final/turkish_project_status_report.md` |
 | Three-person Turkish script | `reports/final/turkish_three_person_presentation_script.md` |

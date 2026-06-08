@@ -328,26 +328,27 @@ python scripts/evaluate_image_folders.py \
 
 ## Pokemon Sprite LoRA External Baseline
 
-This runs the public sprite-specific SDXL LoRA baseline, then normalizes outputs
-to the same 32x32 PixelVAR palette protocol:
+This runs the public sprite-specific SDXL LoRA baseline at the current primary
+external-generator scale, then normalizes outputs to the same 32x32 PixelVAR
+palette protocol:
 
 ```bash
-modal run modal_train.py --action run-pokemon-sprite-lora-batch --num-samples 64 --diffusion-steps 25 --diffusion-height 512 --diffusion-width 512
+modal run modal_train.py --action run-pokemon-sprite-lora-batch --num-samples 256 --diffusion-steps 25 --diffusion-height 512 --diffusion-width 512
 ```
 
 Evaluate the normalized folder against the same PixelVAR reference slice:
 
 ```bash
-modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir pokemon_sprite_lora=outputs/external_baselines/pokemon_sprite_lora/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 64 --batch-size 64 --kid-subsets 20 --kid-subset-size 32 --msssim-pairs 512 --output-dir outputs/external_eval/main_vs_pokemon_sprite_lora_64"
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir pokemon_sprite_lora=outputs/external_baselines/pokemon_sprite_lora/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 256 --batch-size 64 --kid-subsets 20 --kid-subset-size 128 --msssim-pairs 2048 --output-dir outputs/external_eval/main_vs_pokemon_sprite_lora_256"
 ```
 
 Download the report and sample sheet:
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8='1'
-New-Item -ItemType Directory -Force -Path reports\external_eval\main_vs_pokemon_sprite_lora_64 | Out-Null
-modal volume get pixelvar-outputs /external_eval/main_vs_pokemon_sprite_lora_64/evaluation_report.md reports/external_eval/main_vs_pokemon_sprite_lora_64/evaluation_report.md --force
-modal volume get pixelvar-outputs /external_eval/main_vs_pokemon_sprite_lora_64/metrics.csv reports/external_eval/main_vs_pokemon_sprite_lora_64/metrics.csv --force
+New-Item -ItemType Directory -Force -Path reports\external_eval\main_vs_pokemon_sprite_lora_256 | Out-Null
+modal volume get pixelvar-outputs /external_eval/main_vs_pokemon_sprite_lora_256/evaluation_report.md reports/external_eval/main_vs_pokemon_sprite_lora_256/evaluation_report.md --force
+modal volume get pixelvar-outputs /external_eval/main_vs_pokemon_sprite_lora_256/metrics.csv reports/external_eval/main_vs_pokemon_sprite_lora_256/metrics.csv --force
 modal volume get pixelvar-outputs /final/pokemon_sprite_lora_sample_sheet.png reports/final/pokemon_sprite_lora_sample_sheet.png --force
 ```
 
