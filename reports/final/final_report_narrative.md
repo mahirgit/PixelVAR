@@ -42,10 +42,10 @@ ablations:
 We ran internal baselines and three external baseline attempts. The internal
 baselines include HMAR, flat raster AR, and flat MaskGIT. The external baselines
 include SD-piXL, practical diffusion / SSD-1B, and a Pokemon trainer sprite SDXL
-LoRA, all normalized to the same 32x32 PNG protocol before evaluation. The
-Pokemon sprite LoRA was scaled to a 256-image run and remains below PixelVAR
-under the shared evaluator. MDIGAN, PixDiff-PIG, a user study, and 64x64
-generation remain future work.
+LoRA, all normalized to the same 32x32 PNG protocol before evaluation. SSD-1B
+practical diffusion and Pokemon sprite LoRA were both scaled to 256-image runs
+and remain below PixelVAR under the shared evaluator. MDIGAN, PixDiff-PIG, a
+user study, and 64x64 generation remain future work.
 
 ## Metrics Used
 
@@ -167,11 +167,11 @@ External baseline results are also available. SD-piXL was run as a corrected
 16-image metric batch in `reports/external_eval/main_vs_sd_pixl_16`; it is a
 targeted pixel-art-related baseline, but under our protocol its FID/KID and
 PRDC scores are far worse than PixelVAR and its sample sheet is visibly noisy.
-Practical diffusion / SSD-1B was run as a 64-image metric smoke in
-`reports/external_eval/main_vs_practical_diffusion_64`; it sometimes produces
+Practical diffusion / SSD-1B was run as a 256-image metric batch in
+`reports/external_eval/main_vs_practical_diffusion_256`; it sometimes produces
 recognizable sprites, but it is still much worse than PixelVAR and should be
 treated as a secondary generic diffusion baseline. A more targeted Pokemon
-trainer sprite SDXL LoRA was also run as a 64-image metric smoke in
+trainer sprite SDXL LoRA was also run as a 256-image metric batch in
 `reports/external_eval/main_vs_pokemon_sprite_lora_256`. It is visually the
 best external diffusion-style baseline so far, but it still trails PixelVAR
 strongly on FID/KID and PRDC and has visible side-fragment, frame, and

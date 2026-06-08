@@ -306,24 +306,26 @@ modal run modal_train.py --action run-practical-diffusion-smoke --num-samples 4 
   --diffusion-lora-scale 0.8
 ```
 
-If we want numeric metrics for this external baseline, generate a larger batch
-first:
+Run the current primary practical-diffusion metric batch:
 
 ```bash
-modal run modal_train.py --action run-practical-diffusion-batch --num-samples 64 --diffusion-steps 25
+modal run modal_train.py --action run-practical-diffusion-batch --num-samples 256 --diffusion-steps 25 --diffusion-height 512 --diffusion-width 512
 ```
 
 Then evaluate through the same external-folder protocol:
 
 ```bash
-python scripts/evaluate_image_folders.py \
-  --reference-dir outputs/eval_images/pixelvar_main/reference \
-  --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main \
-  --generated-dir practical_diffusion=outputs/external_baselines/practical_diffusion/png32 \
-  --palette-json data/processed/sprites/palette.json \
-  --feature-space inception \
-  --max-images 64 \
-  --output-dir reports/external_eval/main_vs_practical_diffusion
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir practical_diffusion=outputs/external_baselines/practical_diffusion/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 256 --batch-size 64 --kid-subsets 20 --kid-subset-size 128 --msssim-pairs 2048 --output-dir outputs/external_eval/main_vs_practical_diffusion_256"
+```
+
+Download the report and sample sheet:
+
+```powershell
+$env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8='1'
+New-Item -ItemType Directory -Force -Path reports\external_eval\main_vs_practical_diffusion_256 | Out-Null
+modal volume get pixelvar-outputs /external_eval/main_vs_practical_diffusion_256/evaluation_report.md reports/external_eval/main_vs_practical_diffusion_256/evaluation_report.md --force
+modal volume get pixelvar-outputs /external_eval/main_vs_practical_diffusion_256/metrics.csv reports/external_eval/main_vs_practical_diffusion_256/metrics.csv --force
+modal volume get pixelvar-outputs /final/practical_diffusion_sample_sheet.png reports/final/practical_diffusion_sample_sheet.png --force
 ```
 
 ## Pokemon Sprite LoRA External Baseline

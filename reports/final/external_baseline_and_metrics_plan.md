@@ -435,10 +435,44 @@ palette consistency score is expected to be 1.0 because the outputs are
 normalized through the PixelVAR palette protocol; it should not be read as
 evidence that the diffusion model itself learned the project palette.
 
-Recommendation after the metric smoke: keep practical diffusion as an external
-qualitative/comparison baseline, but do not spend on a 4096-image practical
-diffusion run unless we specifically need a large negative external-baseline
-number. The 64-image smoke already shows a large quality gap versus PixelVAR.
+## Practical Diffusion 256-Image Metric Run
+
+Status on 2026-06-08: completed.
+
+Generation command:
+
+```bash
+modal run modal_train.py --action run-practical-diffusion-batch --num-samples 256 --diffusion-steps 25 --diffusion-height 512 --diffusion-width 512
+```
+
+Evaluation command:
+
+```bash
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir practical_diffusion=outputs/external_baselines/practical_diffusion/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 256 --batch-size 64 --kid-subsets 20 --kid-subset-size 128 --msssim-pairs 2048 --output-dir outputs/external_eval/main_vs_practical_diffusion_256"
+```
+
+Pulled artifacts:
+
+- `reports/external_eval/main_vs_practical_diffusion_256/evaluation_report.md`
+- `reports/external_eval/main_vs_practical_diffusion_256/metrics.csv`
+- `reports/final/practical_diffusion_sample_sheet.png`
+
+Metric result:
+
+| Method | Images | FID | KID mean | Precision | Recall | Density | Coverage | MS-SSIM | Palette consistency |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 256 | 46.4794 | 0.007480 | 0.9102 | 0.8711 | 0.8852 | 0.8906 | 0.8368 | 1.0000 |
+| Practical diffusion | 256 | 158.5819 | 0.102159 | 0.0547 | 0.4922 | 0.0141 | 0.0352 | 0.4107 | 1.0000 |
+
+Interpretation after scaling: this remains a useful practical baseline, not a
+competitive one. It has better recall than the Pokemon sprite LoRA, which means
+it covers more varied regions of the reference feature space, but precision,
+density, and coverage remain very low. The sample sheet still contains
+lineups, paired characters, object-like outputs, and malformed crops.
+
+Recommendation after the 256-image run: keep practical diffusion as the generic
+practical comparison. Do not spend on a 4096-image practical diffusion run
+unless we specifically need a large negative external-baseline number.
 
 ## Pokemon Trainer Sprite LoRA External Baseline
 
@@ -541,5 +575,7 @@ failures.
 13. Done: added and ran the public Pokemon trainer sprite SDXL LoRA as a more
     targeted practical external baseline, including a 64-image metric smoke.
 14. Done: scaled the Pokemon sprite LoRA to a 256-image metric run.
-15. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
+15. Done: scaled the SSD-1B practical diffusion baseline to a 256-image metric
+    run.
+16. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.

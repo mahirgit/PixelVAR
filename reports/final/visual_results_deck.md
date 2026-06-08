@@ -443,7 +443,7 @@ protocol:
 | External baseline | Run status | Result |
 | --- | --- | --- |
 | SD-piXL | 16-image metric batch | Valid run, but visually poor and far behind PixelVAR |
-| Practical diffusion / SSD-1B | 64-image metric smoke | Recognizable sprites sometimes, but much worse than PixelVAR |
+| Practical diffusion / SSD-1B | 256-image metric run | Recognizable sprites sometimes, but much worse than PixelVAR |
 
 SD-piXL is the more targeted related method because it is explicitly about
 pixel-art-like score-distillation generation. However, under our fixed-prompt
