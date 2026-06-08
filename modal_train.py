@@ -903,6 +903,12 @@ def commands_for_action(
             )
 
         prepare_cmd = sd_pixl_prepare_cmd("pixelvar_sd_pixl.yaml", seed=0, prompt_index=sd_pixl_prompt_index)
+        clear_outputs_cmd = (
+            "python -c \"import shutil; from pathlib import Path; "
+            "targets = [Path('outputs/external_baselines/sd_pixl/workdir'), "
+            "Path('outputs/external_baselines/sd_pixl/png32')]; "
+            "[shutil.rmtree(path, ignore_errors=True) for path in targets]\""
+        )
         normalize_cmd = (
             "python scripts/normalize_external_images.py "
             "--input-dir outputs/external_baselines/sd_pixl/workdir "
@@ -910,7 +916,9 @@ def commands_for_action(
             "--output-dir outputs/external_baselines/sd_pixl/png32 "
             "--palette-json data/processed/sprites/palette.json "
             "--image-size 32 "
-            "--prefix sd_pixl"
+            "--prefix sd_pixl "
+            "--transparent-from-corners "
+            "--transparent-tolerance 18.0"
         )
         sheet_cmd = (
             "python scripts/build_sample_sheet_from_folders.py "
@@ -931,8 +939,10 @@ def commands_for_action(
             return ("cpu", [sheet_cmd])
 
         if action == "run-sd-pixl-batch":
-            batch_count = 4 if num_samples == 16 else int(num_samples)
-            commands = []
+            batch_count = int(num_samples)
+            if batch_count <= 0:
+                raise ValueError("--num-samples must be positive for --action run-sd-pixl-batch")
+            commands = [clear_outputs_cmd]
             for idx in range(batch_count):
                 config_name = f"pixelvar_sd_pixl_{idx:03d}.yaml"
                 prompt_index = int(sd_pixl_prompt_index) + idx
@@ -941,7 +951,7 @@ def commands_for_action(
             commands.extend([normalize_cmd, sheet_cmd])
             return ("sd_pixl_gpu", commands)
 
-        return ("sd_pixl_gpu", [prepare_cmd, sd_pixl_run_cmd("pixelvar_sd_pixl.yaml"), normalize_cmd, sheet_cmd])
+        return ("sd_pixl_gpu", [clear_outputs_cmd, prepare_cmd, sd_pixl_run_cmd("pixelvar_sd_pixl.yaml"), normalize_cmd, sheet_cmd])
 
     if action in {
         "run-practical-diffusion-smoke",

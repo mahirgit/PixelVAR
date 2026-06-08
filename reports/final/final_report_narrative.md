@@ -38,10 +38,12 @@ ablations:
 | Generated-keep VAR | Evaluated against generated-keep validation | Useful self-reference, not a direct winner comparison |
 | Patch-VQ VAR | Separate decoded RGBA evaluator | Useful learned-token ablation, not a direct winner comparison |
 
-We did not run external baselines such as SD-piXL, MDIGAN, SD LoRA plus
-quantization, raster-scan AR, flat MaskGIT, or a user study. Those remain
-future report/baseline work. The current comparisons are internal ablations
-against held-out validation sprites and visual sample-sheet inspection.
+We ran internal baselines and two external baseline attempts. The internal
+baselines include HMAR, flat raster AR, and flat MaskGIT. The external baselines
+include SD-piXL and practical diffusion / SSD-1B, both normalized to the same
+32x32 PNG protocol before evaluation. MDIGAN, PixDiff-PIG, a stronger matched
+SDXL pixel-art LoRA setup, a user study, and 64x64 generation remain future
+work.
 
 ## Metrics Used
 
@@ -158,6 +160,15 @@ reproduced `3162 / 4096` training images, `365 / 4096` validation images, and
 dataset. Treat flat AR as a memorizing baseline, not as a clean winner.
 
 The four-way visual sheet is `reports/final/four_way_sample_sheet.png`.
+
+External baseline results are also available. SD-piXL was run as a corrected
+16-image metric batch in `reports/external_eval/main_vs_sd_pixl_16`; it is a
+targeted pixel-art-related baseline, but under our protocol its FID/KID and
+PRDC scores are far worse than PixelVAR and its sample sheet is visibly noisy.
+Practical diffusion / SSD-1B was run as a 64-image metric smoke in
+`reports/external_eval/main_vs_practical_diffusion_64`; it sometimes produces
+recognizable sprites, but it is still much worse than PixelVAR and should be
+treated as a secondary generic diffusion baseline.
 
 The same memorization audit was also run for PixelVAR main and HMAR step=1.
 PixelVAR exact-matched `13 / 4096` validation and `11 / 4096` test samples.

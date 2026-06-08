@@ -247,27 +247,28 @@ modal volume get pixelvar-outputs /external_baselines/sd_pixl/png32 outputs/exte
 modal volume get pixelvar-outputs /final/sd_pixl_sample_sheet.png reports/final/sd_pixl_sample_sheet.png --force
 ```
 
-Optional small batch. This is expensive because SD-piXL optimizes one image per
-run, so start small:
+Metric batch used in the report. This is expensive because SD-piXL optimizes one
+image per run, so the reported direct metric batch uses 16 samples:
 
 ```bash
-modal run modal_train.py --action run-sd-pixl-batch --num-samples 4 --sd-pixl-steps 1000
+modal run modal_train.py --action run-sd-pixl-batch --num-samples 16 --sd-pixl-steps 250
 modal run modal_train.py --action normalize-sd-pixl-baseline
 modal run modal_train.py --action build-sd-pixl-sample-sheet
 ```
 
-After a real batch exists, evaluate it with the existing external-folder
-protocol:
+Evaluate the 16-image SD-piXL batch with the existing external-folder protocol:
 
 ```bash
-python scripts/evaluate_image_folders.py \
-  --reference-dir outputs/eval_images/pixelvar_main/reference \
-  --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main \
-  --generated-dir sd_pixl=outputs/external_baselines/sd_pixl/png32 \
-  --palette-json data/processed/sprites/palette.json \
-  --feature-space inception \
-  --max-images 4096 \
-  --output-dir reports/external_eval/main_vs_sd_pixl
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir sd_pixl=outputs/external_baselines/sd_pixl/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 16 --batch-size 16 --kid-subsets 20 --kid-subset-size 8 --msssim-pairs 120 --output-dir outputs/external_eval/main_vs_sd_pixl_16"
+```
+
+Download the SD-piXL metric artifacts:
+
+```bash
+mkdir -p reports/external_eval/main_vs_sd_pixl_16 reports/final
+modal volume get pixelvar-outputs /external_eval/main_vs_sd_pixl_16/evaluation_report.md reports/external_eval/main_vs_sd_pixl_16/evaluation_report.md --force
+modal volume get pixelvar-outputs /external_eval/main_vs_sd_pixl_16/metrics.csv reports/external_eval/main_vs_sd_pixl_16/metrics.csv --force
+modal volume get pixelvar-outputs /final/sd_pixl_sample_sheet.png reports/final/sd_pixl_sample_sheet.png --force
 ```
 
 ## Practical Diffusion External Baseline

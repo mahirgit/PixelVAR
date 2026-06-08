@@ -437,22 +437,25 @@ Presentation line:
 
 ## Slide 21 - External Baseline Status
 
-External SD-piXL baseline setup is prepared on the repo side:
+Two external baselines have now been run through the shared 32x32 image-folder
+protocol:
 
-- Prompt file prepared.
-- Palette export script added.
-- External image normalization script added.
-- SD-piXL baseline preparation script added.
-- Modal actions added.
-- Sample sheet and evaluation path prepared.
+| External baseline | Run status | Result |
+| --- | --- | --- |
+| SD-piXL | 16-image metric batch | Valid run, but visually poor and far behind PixelVAR |
+| Practical diffusion / SSD-1B | 64-image metric smoke | Recognizable sprites sometimes, but much worse than PixelVAR |
 
-However, the actual SD-piXL smoke or batch run has not been completed yet.
+SD-piXL is the more targeted related method because it is explicitly about
+pixel-art-like score-distillation generation. However, under our fixed-prompt
+32x32 sprite protocol it produced noisy tiled outputs rather than centered
+characters.
 
 Correct presentation wording:
 
-> The external baseline pipeline is prepared, but real SD-piXL generated samples
-> have not yet been added to the metric table. We should not claim that external
-> comparison is complete.
+> We ran external baselines, but they should be presented carefully. SD-piXL is
+> a serious targeted attempt, yet it fails under our adapted 32x32 sprite
+> protocol. SSD-1B is a practical generic diffusion comparison and should remain
+> secondary.
 
 ## Slide 22 - Final Result Interpretation
 
@@ -466,15 +469,17 @@ Honest quality summary:
 | Flat MaskGIT | Weak | Failed under current setup |
 | Generated/mixed data | Moderate | Larger dataset did not improve real-val quality |
 | Patch-VQ | Technically works | Learned-token path works, but blocky and worse |
-| SD-piXL external | Incomplete | Setup exists, actual run missing |
+| SD-piXL external | Weak | Targeted baseline ran, but metrics and visuals are poor |
+| Practical diffusion | Weak/moderate | Generic diffusion baseline, not directly competitive |
 
 Final claim:
 
 > PixelVAR is a working palette-safe, coarse-to-fine generator for 32x32
 > pixel-art sprites. Among the completed internal models, it is the strongest
 > result on the sprite-feature evaluator with a much cleaner memorization profile
-> than Flat AR. However, without the external diffusion baseline and 64x64
-> experiments, we should not make a broader SOTA claim.
+> than Flat AR. External diffusion baselines do not beat it under our protocol,
+> but without broader external reproductions and 64x64 experiments, we should
+> not make a broader SOTA claim.
 
 ## Slide 23 - Output and Artifact List
 
@@ -487,6 +492,8 @@ Useful files for presentation:
 | Patch-VQ sample sheet | `reports/final/final_patchvq_sample_sheet.png` |
 | Final branch comparison | `reports/final/final_branch_comparison_sheet.png` |
 | Four-way model comparison | `reports/final/four_way_sample_sheet.png` |
+| SD-piXL external sheet | `reports/final/sd_pixl_sample_sheet.png` |
+| Practical diffusion sheet | `reports/final/practical_diffusion_sample_sheet.png` |
 | Model decision table | `reports/final/model_decision_table.md` |
 | Known metrics comparison | `reports/final/known_metrics_comparison.md` |
 | Memorization audit summary | `reports/final/memorization_audit_summary.md` |

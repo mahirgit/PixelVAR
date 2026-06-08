@@ -259,17 +259,62 @@ palette-colored blocks rather than a recognizable centered 32x32 character
 sprite. Treat this as a pipeline smoke success, not as a competitive baseline
 result.
 
-Recommendation: do not spend on the larger SD-piXL batch without first tuning
-the SD-piXL setup. The current evidence suggests SD-piXL should remain a
-qualitative related external baseline path, unless we invest extra time in
-prompt/control/reference tuning.
+The one-image smoke run was not a metric result. It only verified the
+environment, downloads, prompt path, palette conversion, and output
+normalization.
 
-Do not treat the one-image smoke run as a metric result. Use it only to verify
-the environment, downloads, prompt path, palette conversion, and output
-normalization. Numeric metrics should only be reported if we generate enough
-SD-piXL samples to make FID/KID/PRDC at least minimally meaningful; for this
-optimization-based method, that may be too expensive and it may remain a
-qualitative related-work baseline.
+## SD-piXL 16-Image Metric Batch
+
+Status on 2026-06-08: completed.
+
+Before the metric run, three SD-piXL adapter issues were corrected:
+
+1. `run-sd-pixl-batch --num-samples 16` previously hit the Modal entrypoint's
+   default-value guard and ran only four fresh optimizations. The batch action
+   now uses the explicit `--num-samples` value.
+2. Old SD-piXL workdir/png32 outputs could leak into a later normalization run.
+   The SD-piXL smoke/batch actions now clear those output folders before
+   generating new results.
+3. SD-piXL normalization now uses the same corner-background transparency
+   cleanup used for the practical diffusion baseline. This reduced opaque-ratio
+   bias, although it did not make the outputs competitive.
+
+Generation command:
+
+```bash
+modal run modal_train.py --action run-sd-pixl-batch --num-samples 16 --sd-pixl-steps 250
+```
+
+Evaluation command:
+
+```bash
+modal run modal_train.py --action cmd-gpu --cmd "python scripts/evaluate_image_folders.py --reference-dir outputs/eval_images/pixelvar_main/reference --generated-dir pixelvar_main=outputs/eval_images/pixelvar_main/pixelvar_main --generated-dir sd_pixl=outputs/external_baselines/sd_pixl/png32 --palette-json data/processed/sprites/palette.json --feature-space inception --max-images 16 --batch-size 16 --kid-subsets 20 --kid-subset-size 8 --msssim-pairs 120 --output-dir outputs/external_eval/main_vs_sd_pixl_16"
+```
+
+Pulled artifacts:
+
+- `reports/external_eval/main_vs_sd_pixl_16/evaluation_report.md`
+- `reports/external_eval/main_vs_sd_pixl_16/metrics.csv`
+- `reports/final/sd_pixl_sample_sheet.png`
+
+Metric result:
+
+| Method | Images | FID | KID mean | Precision | Recall | Density | Coverage | MS-SSIM | Palette consistency | Opaque ratio | Edge density |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| PixelVAR main | 16 | 151.0927 | 0.014713 | 1.0000 | 0.9375 | 1.3500 | 1.0000 | 0.8247 | 1.0000 | 0.2319 | 0.1888 |
+| SD-piXL | 16 | 497.7065 | 0.517647 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.4926 | 1.0000 | 0.6720 | 0.4007 |
+
+Interpretation: SD-piXL is not competitive in this adapted protocol. The
+16-image sheet still looks like noisy tiled color fields rather than centered
+sprite characters. The zero PRDC precision/recall/density/coverage values are
+consistent with that visual result. Palette consistency is 1.0 because all
+outputs are quantized through the PixelVAR palette, not because SD-piXL learned
+the palette distribution.
+
+Recommendation: include SD-piXL as a serious external baseline attempt with
+metrics, but clearly mark it as prompt-conditioned score-distillation adapted to
+our 32x32 protocol. Do not spend on a 64-image SD-piXL run unless we decide to
+tune the SD-piXL setup or need a larger negative result for completeness.
 
 ## Practical Diffusion External Baseline
 
@@ -384,10 +429,11 @@ number. The 64-image smoke already shows a large quality gap versus PixelVAR.
 6. Done: add SD-piXL as the first external released-code baseline path.
 7. Done: run the SD-piXL smoke action on Modal and inspect
    `reports/final/sd_pixl_sample_sheet.png`.
-8. Done: add and run the practical SSD-1B diffusion baseline smoke, then inspect
+8. Done: run a corrected 16-image SD-piXL metric batch against PixelVAR main.
+9. Done: add and run the practical SSD-1B diffusion baseline smoke, then inspect
    `reports/final/practical_diffusion_sample_sheet.png`.
-9. Done: run a 64-image practical-diffusion metric smoke against PixelVAR main.
-10. Next: keep SD-piXL qualitative and practical diffusion as a weak external
-    metric/visual baseline unless we decide to spend on a larger negative result.
-11. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
+10. Done: run a 64-image practical-diffusion metric smoke against PixelVAR main.
+11. Next: search/attempt the next targeted external baseline: PixDiff-PIG if
+    code is available, otherwise VQ-Diffusion pixel-art.
+12. Try MDIGAN only if we can adapt its conditional pose task cleanly to our data;
    otherwise cite it as related work rather than a direct numeric baseline.
