@@ -1,11 +1,11 @@
-# PixelVAR 10-Minute Speaker Guide
+# PixelVAR Speaker Guide
 
-Use `reports/final/pixelvar_final_presentation_10min_story_with_comparisons.pptx` for the live talk.
+Use `reports/final/pixelvar_final_presentation_all_main_17slides.pptx` for the live talk.
 Use `reports/final/pixelvar_final_presentation_master_evidence.pptx` only as the full evidence archive.
 
 Do not present `main` as the final code state. The final working branch is `codex/pixelvar-external-baselines`.
 
-The live talk is still slides 1-12. Slides 13-31 are Q&A backup only; slides 29-31 are optional extra visual/metric comparison slides if someone asks for more sample evidence or more numbers.
+This version has no backup section. All 17 slides are main slides and can be presented. The added comparison/metric slides should be kept short verbally, not read line by line.
 
 ## Story Spine
 
@@ -22,33 +22,26 @@ Pixel art is discrete. Continuous generators miss palette and transparency const
 | 5 | P2 | 1:05 | Core methodology: pyramid, token contract, HMAR mask |
 | 6 | P2 | 0:45 | Dataset, split, metric layers, baselines |
 | 7 | P2 | 0:55 | Main result: samples and selected checkpoint |
-| 8 | P3 | 0:50 | HMAR ablation: close, but more refinement did not help |
-| 9 | P3 | 1:10 | Centerpiece audit: raw FID vs memorization |
-| 10 | P3 | 0:55 | External baselines: normalized protocol plus failure visuals |
-| 11 | P3 | 0:30 | 170K generation scale; automatic gate, not user study |
-| 12 | P1 | 0:55 | Limitations, next proof, bounded final claim |
+| 8 | P2 | 0:45 | Internal sample comparison across implemented branches |
+| 9 | P3 | 0:45 | HMAR ablation: close, but more refinement did not help |
+| 10 | P3 | 0:35 | Domain metrics: palette, opacity, edge, exact-match caveat |
+| 11 | P3 | 0:45 | Known image metrics full table |
+| 12 | P3 | 1:00 | Centerpiece audit: raw FID vs memorization |
+| 13 | P3 | 0:45 | Expanded metric scoreboard across internal and external rows |
+| 14 | P3 | 0:45 | External baselines: normalized protocol plus failure visuals |
+| 15 | P3 | 0:45 | Baseline sample comparison |
+| 16 | P3 | 0:25 | 170K generation scale; automatic gate, not user study |
+| 17 | P1 | 0:45 | Limitations, next proof, bounded final claim |
 
-Total planned time: about 9:40.
-
-## Extra Backup Slides
-
-Slides 29-31 were added as optional evidence:
-
-| Slide | Use |
-|---:|---|
-| 29 | Internal sample comparison across Real-only VAR, HMAR, generated-keep, mixed data, OpenGameArt-mixed, and Patch-VQ |
-| 30 | Baseline sample comparison across PixelVAR/HMAR/Flat AR/MaskGIT plus SD-piXL, SSD-1B, and Pokemon LoRA |
-| 31 | Expanded metric scoreboard for internal known metrics and external normalized rows |
-
-Use these only in Q&A. Do not insert them into the timed 10-minute flow unless the presentation time limit changes.
+Total planned time: about 12-13 minutes if spoken comfortably. For a strict 10-minute slot, compress slides 10-11 and 13 to one-sentence reads.
 
 ## Presenter Split
 
-P1 covers motivation, gap, proposal contract, pivot, and final limitations: slides 1-4 and 12.
+P1 covers motivation, gap, proposal contract, pivot, and final limitations: slides 1-4 and 17.
 
-P2 covers method, setup, and main result: slides 5-7.
+P2 covers method, setup, main result, and internal sample comparison: slides 5-8.
 
-P3 covers ablations, audit, external baselines, and generation scale: slides 8-11.
+P3 covers ablations, metrics, audit, external baselines, sample comparisons, and generation scale: slides 9-16.
 
 Transition from P1 to P2: "So the key design question became: how do we represent sprites so the model never has to repair palette or transparency afterward?"
 
